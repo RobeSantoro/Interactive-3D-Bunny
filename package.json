@@ -1,5 +1,5 @@
 {
-  "name": "vite_threejs",
+  "name": "interactive_character",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
