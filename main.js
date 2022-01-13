@@ -89,8 +89,7 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
     }
 
   })
-
-
+  
   scene.add(rabbit)
 
 })
@@ -152,7 +151,6 @@ addEventListener('mousemove', function (e) {
   var mousecoords = getMousePos(e)  
   moveEye(mousecoords, LeftEye, 60)
   moveEye(mousecoords, RightEye, 60)
-  console.log(RightEye.rotation)
 });
 
 function getMousePos(e) {
@@ -211,15 +209,15 @@ function getMouseDegrees(x, y, degreeLimit) {
   if (y <= w.y / 2) {
     ydiff = w.y / 2 - y;
     yPercentage = (ydiff / (w.y / 2)) * 100;
-    // Note that I cut degreeLimit in half when she looks up
-    dy = (((degreeLimit * 0.5) * yPercentage) / 100) * -1;
+    // Note that I cut degreeLimit in half when she looks up (NOT ANYMORE)
+    dy = (((degreeLimit * 1) * yPercentage) / 100);
   }
 
   // Down (Rotates neck down between 0 and degreeLimit)
   if (y >= w.y / 2) {
     ydiff = y - w.y / 2;
     yPercentage = (ydiff / (w.y / 2)) * 100;
-    dy = (degreeLimit * yPercentage) / 100;
+    dy = (degreeLimit * yPercentage) / 100 * -1;
   }
   return { x: dx, y: dy };
 }
