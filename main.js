@@ -7,12 +7,15 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 // Import GLTF loader
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
+// AnimeJS
+import anime from 'animejs/lib/anime.es.js'
+import { LightProbe } from 'three'
+
 // Window. Sizes
 const sizes = {
   height: window.innerHeight,
   width: window.innerWidth
 }
-
 // Create a scene
 const scene = new THREE.Scene()
 
@@ -21,8 +24,14 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Create a camera
 const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-camera.position.set(5, 5, 15)
-scene.add(camera)
+camera.position.y = 2
+camera.position.z = -20
+
+// Create a Camera Group
+const cameraGroup = new THREE.Group()
+cameraGroup.add(camera)
+
+scene.add(cameraGroup)
 
 // Orbit controls
 const controls = new OrbitControls(camera, canvas)
@@ -44,35 +53,46 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-renderer.setClearColor(0x101010, 0)
+renderer.setClearColor(0x44337a, 0)
 renderer.render(scene, camera)
 renderer.outputEncoding = THREE.sRGBEncoding
+
+// Turn on shadow for the renderer
+renderer.shadowMap.enabled = true
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 // Load the environment texture
 const textureLoader = new THREE.TextureLoader()
 const envTexture = textureLoader.load('./assets/garage_1k.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
-// Grid
-const gridHelper = new THREE.GridHelper(10, 10)
-scene.add(gridHelper)
-
-//Axis Helpers
+/*// Grid
+ const gridHelper = new THREE.GridHelper(10, 10)
+scene.add(gridHelper) */
+/* //Axis Helpers
 const axisHelper = new THREE.AxesHelper(3)
-scene.add(axisHelper)
+scene.add(axisHelper) */
 
 // Eyes
+let Root = null
+let HeadJoint = null
+
 let LeftEye = null
 let RightEye = null
-let Head = null
+let LeftEyeLid = null
+let RightEyeLid = null
+
 
 // Create Gltf loader
 const rabbitHead = new GLTFLoader()
 
-rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
+rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { //
+
   const rabbit = gltf.scene
 
   rabbit.traverse((child) => {
+
+    // Assign Environment map to all materials and set the shadow true for all meshes
     if (child.isMesh) {
       child.material.envMap = envTexture
       child.material.envMapIntensity = 1
@@ -81,24 +101,73 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
       child.receiveShadow = true
     }
 
+    // Root
+    if (child.name === 'Armature') {
+      Root = child
+    }
+
+    // Head Joint
+    if (child.name === 'HEAD_joint' && child.isBone) {
+      HeadJoint = child
+    }
+
+    // Left EyeLid
+    if (child.name === ('L_EYE_UP_LID_mesh')) {
+      LeftEyeLid = child
+    }
+    // Right EyeLid
+    if (child.name === ('R_EYE_UP_LID_mesh')) {
+      RightEyeLid = child
+    }
+
+    // Eyes
     if (child.name === 'L_EYE_mesh') {
-      LeftEye = child  
+      LeftEye = child
     }
     if (child.name === 'R_EYE_mesh') {
-      RightEye = child      
+      RightEye = child
     }
 
   })
-  
+
   scene.add(rabbit)
+  Root.position.y = -5
+
+  anime({
+    targets: Root.position,
+    y: 0,
+    duration: 2000,
+    delay: 1000,
+    easing: 'easeOutElastic(1, .3)'
+  })
 
 })
 
-// Create a light
+/* // Create a light
 const light = new THREE.PointLight(0xffffff, 1, 100)
-light.position.set(10, 10, 10)
-scene.add(light)
+light.position.set(2, 2,-5)
+light.castShadow = true
+scene.add(light) */
 
+//Create a DirectionalLight and turn on shadows for the light
+
+const directionallight = new THREE.DirectionalLight( 0xffffff, 1, 100 )
+directionallight.position.set( 5, 10, -5 ) //default; directionallight shining from top
+directionallight.castShadow = true // default false
+
+//Set up shadow properties for the directionallight
+directionallight.shadow.mapSize.width = 1024 // default
+directionallight.shadow.mapSize.height = 1024 // default
+directionallight.shadow.camera.near = 0.5 // default
+directionallight.shadow.camera.far = 500 // default
+directionallight.shadow.camera = new THREE.OrthographicCamera( -10, 10, 10, -10, .5, 500 )
+
+scene.add( directionallight )
+
+
+/* //Create a helper for the shadow camera (optional)
+const helper = new THREE.CameraHelper( directionallight.shadow.camera )
+scene.add( helper ) */
 
 // Initialize the main loop
 const clock = new THREE.Clock()
@@ -148,21 +217,24 @@ addEventListener('resize', () => {
 })
 
 addEventListener('mousemove', function (e) {
-  var mousecoords = getMousePos(e)  
-  moveEye(mousecoords, LeftEye, 60)
-  moveEye(mousecoords, RightEye, 60)
-});
+  var mousecoords = getMousePos(e)
+
+  OrientTowards(mousecoords, LeftEye, 60)
+  OrientTowards(mousecoords, RightEye, 60)
+  OrientTowards(mousecoords, Root, 15)
+  OrientTowards(mousecoords, HeadJoint, 20)
+ 
+})
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
 }
 
-function moveEye(mouse, eye, degreeLimit) {
+function OrientTowards(mouse, eye, degreeLimit) {
   let degrees = getMouseDegrees(mouse.x, mouse.y, degreeLimit)
   eye.rotation.y = THREE.Math.degToRad(degrees.x)
   eye.rotation.x = THREE.Math.degToRad(degrees.y)
 }
-
 
 /* https://tympanus.net/codrops/2019/10/14/how-to-create-an-interactive-3d-character-with-three-js/
 
