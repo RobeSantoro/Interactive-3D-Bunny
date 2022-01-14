@@ -1,7 +1,7 @@
 import './style.css'
 
 import * as THREE from 'three'
-//import Stats from 'three/examples/jsm/libs/stats.module.js'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Import GLTF loader
@@ -203,8 +203,8 @@ directionallight.position.set(5, 10, -5)
 directionallight.castShadow = true // default false
 
 //Set up shadow properties for the directionallight
-directionallight.shadow.mapSize.width = 1024 // default
-directionallight.shadow.mapSize.height = 1024 // default
+directionallight.shadow.mapSize.width = 512 // default
+directionallight.shadow.mapSize.height = 512 // default
 directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
 directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
@@ -225,11 +225,11 @@ const clock = new THREE.Clock()
 let lastElapsedTime = 0
 let FPS = 0
 
-/* // Stats
+// Stats
 const stats = new Stats()
 stats.showPanel(0)
 document.body.appendChild(stats.dom)
- */
+ 
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -244,7 +244,7 @@ const animate = () => {
   controls.update()
 
   // Update stats
-  //stats.update()
+  stats.update()
 
   // Render
   renderer.render(scene, camera)
