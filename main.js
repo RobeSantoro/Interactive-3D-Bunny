@@ -62,7 +62,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 // Load the environment texture
 const textureLoader = new THREE.TextureLoader()
-const envTexture = textureLoader.load('./assets/garage_1k.jpg')
+const envTexture = textureLoader.load('./textures/garage_1k.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
 /*// Grid
@@ -93,7 +93,7 @@ let RightLowerEyeLid = null
 const rabbitHead = new GLTFLoader()
 
 // Load the gltf
-rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { 
+rabbitHead.load('./models/RabbitHead.glb', (gltf) => { 
 
   const rabbit = gltf.scene
 
