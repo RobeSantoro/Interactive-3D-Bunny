@@ -1,7 +1,7 @@
 import './style.css'
 
 import * as THREE from 'three'
-import Stats from 'three/examples/jsm/libs/stats.module.js'
+//import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Import GLTF loader
@@ -9,7 +9,6 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 // AnimeJS
 import anime from 'animejs/lib/anime.es.js'
-import { LightProbe } from 'three'
 
 // Window. Sizes
 const sizes = {
@@ -25,7 +24,7 @@ const canvas = document.querySelector('canvas.webgl')
 // Create a camera
 const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
 camera.position.y = 0
-camera.position.z = -10
+camera.position.z = 10
 
 // Create a Camera Group
 const cameraGroup = new THREE.Group()
@@ -97,7 +96,6 @@ const rabbitHead = new GLTFLoader()
 rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { 
 
   const rabbit = gltf.scene
-  //console.log(rabbit);
 
   rabbit.traverse((child) => {
 
@@ -108,7 +106,7 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
     // Assign Environment map to all materials and set the shadow true for all meshes
     if (child.isMesh) {
       child.material.envMap = envTexture
-      child.material.envMapIntensity = 1
+      child.material.envMapIntensity = 0.6
       child.material.needsUpdate = true
       child.castShadow = true
       child.receiveShadow = true
@@ -154,10 +152,10 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
       RightLowerEyeLid = child
     }
 
-    //Eyelids = [LeftUpperEyeLid, RightUpperEyeLid, LeftLowerEyeLid, RightLowerEyeLid]
-
   })
 
+  // Rotate the scene 180 degrees on the Y axis
+  rabbit.rotation.y = THREE.Math.degToRad(180)
   scene.add(rabbit)
   Root.position.y = -5
 
@@ -194,14 +192,12 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => {
 
 })
 
-/* // Create a light
-const light = new THREE.PointLight(0xffffff, 1, 100)
-light.position.set(2, 2,-5)
-light.castShadow = true
-scene.add(light) */
+// Create a Pointlight
+const Pointlight = new THREE.PointLight(0xffffff, 1, 100)
+Pointlight.position.set(-2, 2, 5)
+scene.add(Pointlight)
 
-//Create a DirectionalLight and turn on shadows for the light
-
+// Create a DirectionalLight and turn on shadows for the light
 const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
 directionallight.position.set(5, 10, -5)
 directionallight.castShadow = true // default false
@@ -213,22 +209,27 @@ directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
 directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
 
-scene.add(directionallight)
+scene.add(directionallight) 
 
-
-/* //Create a helper for the shadow camera (optional)
+/* LIGHT HELPERS
+// Create a helper for Point Light
+const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
+scene.add(pointLightHelper)
+//Create a helper for the shadow camera (optional)
 const helper = new THREE.CameraHelper( directionallight.shadow.camera )
-scene.add( helper ) */
+scene.add( helper )
+*/
 
 // Initialize the main loop
 const clock = new THREE.Clock()
 let lastElapsedTime = 0
 let FPS = 0
 
-// Stats
+/* // Stats
 const stats = new Stats()
 stats.showPanel(0)
 document.body.appendChild(stats.dom)
+ */
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -243,7 +244,7 @@ const animate = () => {
   controls.update()
 
   // Update stats
-  stats.update()
+  //stats.update()
 
   // Render
   renderer.render(scene, camera)
