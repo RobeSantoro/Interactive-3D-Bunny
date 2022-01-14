@@ -2,7 +2,7 @@ import './style.css'
 
 import * as THREE from 'three'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Import GLTF loader
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -24,7 +24,7 @@ const canvas = document.querySelector('canvas.webgl')
 // Create a camera
 const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
 camera.position.y = 0
-camera.position.z = 10
+camera.position.z = 20
 
 // Create a Camera Group
 const cameraGroup = new THREE.Group()
@@ -32,7 +32,7 @@ cameraGroup.add(camera)
 
 scene.add(cameraGroup)
 
-// Orbit controls
+/* // Orbit controls
 const controls = new OrbitControls(camera, canvas)
 controls.dampingFactor = 0.25
 controls.enableDamping = true
@@ -40,7 +40,7 @@ controls.enableZoom = true
 controls.enablePan = true
 controls.enableRotate = true
 controls.autoRotate = true
-controls.autoRotateSpeed = .01
+controls.autoRotateSpeed = .01 */
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -93,17 +93,17 @@ let RightLowerEyeLid = null
 const rabbitHead = new GLTFLoader()
 
 // Load the gltf
-rabbitHead.load('./models/RabbitHead.glb', (gltf) => { 
+rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
 
-  const rabbit = gltf.scene
+  const rabbitScene = gltf.scene
 
-  rabbit.traverse((child) => {
+  rabbitScene.traverse((child) => {
 
     /* if (child.isBone) {
       console.log(child.name);
     } */
 
-    // Assign Environment map to all materials and set the shadow true for all meshes
+    // Assign Envmap to all materials and activate the shadow casting
     if (child.isMesh) {
       child.material.envMap = envTexture
       child.material.envMapIntensity = 0.6
@@ -145,7 +145,7 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
 
     // Lower Left EyeLid
     if (child.name === ('L_EYE_LW_LID_mesh')) {
-      LeftLowerEyeLid = child      
+      LeftLowerEyeLid = child
     }
     // Lower Right EyeLid
     if (child.name === ('R_EYE_LW_LID_mesh')) {
@@ -155,16 +155,27 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
   })
 
   // Rotate the scene 180 degrees on the Y axis
-  rabbit.rotation.y = THREE.Math.degToRad(180)
-  scene.add(rabbit)
-  Root.position.y = -5
+  rabbitScene.rotation.y = THREE.Math.degToRad(180)
+  rabbitScene.position.y = -1
+  Root.position.y = -4.2
+  
+  scene.add(rabbitScene)
+
+
+  // Animate the scene
+  anime({
+    targets: rabbitScene.position,
+    y: 0,
+    duration: 1500,
+    delay: 0,
+  })
 
   // Loading Animation
   anime({
     targets: Root.position,
     y: 0,
     duration: 2000,
-    delay: 1000,
+    delay: 2000,
     easing: 'easeOutElastic(1, .3)'
   })
 
@@ -209,7 +220,7 @@ directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
 directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
 
-scene.add(directionallight) 
+scene.add(directionallight)
 
 /* LIGHT HELPERS
 // Create a helper for Point Light
@@ -229,7 +240,6 @@ let FPS = 0
 const stats = new Stats()
 stats.showPanel(0)
 document.body.appendChild(stats.dom)
- 
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -240,8 +250,14 @@ const animate = () => {
   //FPS
   FPS = Math.round(1 / deltaTime)
 
+  setTimeout( () => {
+    if (FPS < 60 && isMobile) {
+      alert('Your mobile is running slow. Consider using a faster computer.')
+    }
+  }, 2000);
+
   // Update controls
-  controls.update()
+  //controls.update()
 
   // Update stats
   stats.update()
@@ -338,6 +354,17 @@ addEventListener('resize', () => {
 
 // Listen to the mouse move
 addEventListener('mousemove', function (e) {
+  var mousecoords = getMousePos(e)
+
+  OrientTowards(mousecoords, LeftEye, 60)
+  OrientTowards(mousecoords, RightEye, 60)
+  OrientTowards(mousecoords, NECK_joint, 15)
+  OrientTowards(mousecoords, HeadJoint, 20)
+
+})
+
+// Listen to the touch move
+addEventListener('touchmove', function (e) {
   var mousecoords = getMousePos(e)
 
   OrientTowards(mousecoords, LeftEye, 60)
