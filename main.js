@@ -24,8 +24,8 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Create a camera
 const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-camera.position.y = 2
-camera.position.z = -20
+camera.position.y = 0
+camera.position.z = -10
 
 // Create a Camera Group
 const cameraGroup = new THREE.Group()
@@ -75,22 +75,35 @@ scene.add(axisHelper) */
 
 // Eyes
 let Root = null
+
+let NECK_joint = null
 let HeadJoint = null
 
 let LeftEye = null
 let RightEye = null
-let LeftEyeLid = null
-let RightEyeLid = null
 
+// EYELIDs
+let Eyelids = null
+
+let LeftUpperEyeLid = null
+let RightUpperEyeLid = null
+let LeftLowerEyeLid = null
+let RightLowerEyeLid = null
 
 // Create Gltf loader
 const rabbitHead = new GLTFLoader()
 
-rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { //
+// Load the gltf
+rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { 
 
   const rabbit = gltf.scene
+  //console.log(rabbit);
 
   rabbit.traverse((child) => {
+
+    /* if (child.isBone) {
+      console.log(child.name);
+    } */
 
     // Assign Environment map to all materials and set the shadow true for all meshes
     if (child.isMesh) {
@@ -106,18 +119,13 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { //
       Root = child
     }
 
+    if (child.name === 'NECK_joint' && child.isBone) {
+      NECK_joint = child
+    }
+
     // Head Joint
     if (child.name === 'HEAD_joint' && child.isBone) {
       HeadJoint = child
-    }
-
-    // Left EyeLid
-    if (child.name === ('L_EYE_UP_LID_mesh')) {
-      LeftEyeLid = child
-    }
-    // Right EyeLid
-    if (child.name === ('R_EYE_UP_LID_mesh')) {
-      RightEyeLid = child
     }
 
     // Eyes
@@ -128,17 +136,60 @@ rabbitHead.load('./assets/models/RabbitHead.glb', (gltf) => { //
       RightEye = child
     }
 
+    // Upper Left EyeLid
+    if (child.name === ('L_EYE_UP_LID_mesh')) {
+      LeftUpperEyeLid = child
+    }
+    // Upper Right EyeLid
+    if (child.name === ('R_EYE_UP_LID_mesh')) {
+      RightUpperEyeLid = child
+    }
+
+    // Lower Left EyeLid
+    if (child.name === ('L_EYE_LW_LID_mesh')) {
+      LeftLowerEyeLid = child      
+    }
+    // Lower Right EyeLid
+    if (child.name === ('R_EYE_LW_LID_mesh')) {
+      RightLowerEyeLid = child
+    }
+
+    //Eyelids = [LeftUpperEyeLid, RightUpperEyeLid, LeftLowerEyeLid, RightLowerEyeLid]
+
   })
 
   scene.add(rabbit)
   Root.position.y = -5
 
+  // Loading Animation
   anime({
     targets: Root.position,
     y: 0,
     duration: 2000,
     delay: 1000,
     easing: 'easeOutElastic(1, .3)'
+  })
+
+  // Upper Blink animation
+  anime({
+    targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+    x: (-Math.PI / 2) + 0.01,
+    duration: 100,
+    easing: 'linear',
+    direction: 'alternate',
+    loop: true,
+    delay: 2500
+  })
+
+  // Lower Blink animation
+  anime({
+    targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
+    x: Math.PI / 8,
+    duration: 100,
+    easing: 'linear',
+    direction: 'alternate',
+    loop: true,
+    delay: 2500
   })
 
 })
@@ -151,8 +202,8 @@ scene.add(light) */
 
 //Create a DirectionalLight and turn on shadows for the light
 
-const directionallight = new THREE.DirectionalLight( 0xffffff, 1, 100 )
-directionallight.position.set( 5, 10, -5 ) //default; directionallight shining from top
+const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
+directionallight.position.set(5, 10, -5)
 directionallight.castShadow = true // default false
 
 //Set up shadow properties for the directionallight
@@ -160,9 +211,9 @@ directionallight.shadow.mapSize.width = 1024 // default
 directionallight.shadow.mapSize.height = 1024 // default
 directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
-directionallight.shadow.camera = new THREE.OrthographicCamera( -10, 10, 10, -10, .5, 500 )
+directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
 
-scene.add( directionallight )
+scene.add(directionallight)
 
 
 /* //Create a helper for the shadow camera (optional)
@@ -203,37 +254,15 @@ const animate = () => {
 
 animate()
 
-// Manage the resize of the window
-addEventListener('resize', () => {
-
-  sizes.width = innerWidth
-  sizes.height = innerHeight
-  camera.aspect = sizes.width / sizes.height
-  camera.updateProjectionMatrix()
-  renderer.setSize(sizes.width, sizes.height)
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-  renderer.render(scene, camera)
-
-})
-
-addEventListener('mousemove', function (e) {
-  var mousecoords = getMousePos(e)
-
-  OrientTowards(mousecoords, LeftEye, 60)
-  OrientTowards(mousecoords, RightEye, 60)
-  OrientTowards(mousecoords, Root, 15)
-  OrientTowards(mousecoords, HeadJoint, 20)
- 
-})
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
 }
 
-function OrientTowards(mouse, eye, degreeLimit) {
-  let degrees = getMouseDegrees(mouse.x, mouse.y, degreeLimit)
-  eye.rotation.y = THREE.Math.degToRad(degrees.x)
-  eye.rotation.x = THREE.Math.degToRad(degrees.y)
+function OrientTowards(lookAt, object, degreeLimit) {
+  let degrees = getMouseDegrees(lookAt.x, lookAt.y, degreeLimit)
+  object.rotation.y = THREE.Math.degToRad(degrees.x)
+  object.rotation.x = THREE.Math.degToRad(degrees.y)
 }
 
 /* https://tympanus.net/codrops/2019/10/14/how-to-create-an-interactive-3d-character-with-three-js/
@@ -249,7 +278,6 @@ Once the function has these percentages, it returns the percentage of the degree
 So the function can determine your mouse is 75% right and 50% up,
 and return 75% of the degree limit on the x axis and 50% of the degree limit on the y axis.
 Same for left and right. */
-
 function getMouseDegrees(x, y, degreeLimit) {
   let dx = 0,
     dy = 0,
@@ -293,3 +321,27 @@ function getMouseDegrees(x, y, degreeLimit) {
   }
   return { x: dx, y: dy };
 }
+
+// Listen to the resize of the window
+addEventListener('resize', () => {
+
+  sizes.width = innerWidth
+  sizes.height = innerHeight
+  camera.aspect = sizes.width / sizes.height
+  camera.updateProjectionMatrix()
+  renderer.setSize(sizes.width, sizes.height)
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+  renderer.render(scene, camera)
+
+})
+
+// Listen to the mouse move
+addEventListener('mousemove', function (e) {
+  var mousecoords = getMousePos(e)
+
+  OrientTowards(mousecoords, LeftEye, 60)
+  OrientTowards(mousecoords, RightEye, 60)
+  OrientTowards(mousecoords, NECK_joint, 15)
+  OrientTowards(mousecoords, HeadJoint, 20)
+
+})
