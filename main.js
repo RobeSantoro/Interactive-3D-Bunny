@@ -160,32 +160,31 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   })
 
   // Listen to the mouse move
-
   addEventListener('mousemove', function (e) {
     var mousecoords = getMousePos(e)
-
     OrientTowards(mousecoords, LeftEye, 60)
     OrientTowards(mousecoords, RightEye, 60)
     OrientTowards(mousecoords, NeckJoint, 15)
     OrientTowards(mousecoords, HeadJoint, 20)
-
   })
 
   // Listen to the touch move
-  addEventListener('touchmove', function (e) {
-    var touchcoords = getMousePos(e)
-
+  addEventListener('touchmove', function (e) {    
+    var touchcoords = getTouchPos(e)
     OrientTowards(touchcoords, LeftEye, 60)
     OrientTowards(touchcoords, RightEye, 60)
     OrientTowards(touchcoords, NeckJoint, 15)
     OrientTowards(touchcoords, HeadJoint, 20)
-
   })
 
 })
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
+} 
+
+function getTouchPos(e) {
+  return { x: e.touches[0].clientX, y: e.touches[0].clientY }  
 }
 
 function OrientTowards(lookAt, object, degreeLimit) {
