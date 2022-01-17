@@ -14,7 +14,7 @@ import anime from 'animejs/lib/anime.es.js'
 import { Pane } from 'tweakpane'
 
 const PARAMS = {
-  useOrbitCamera: true,
+  useOrbitCamera: false,
 }
 
 const pane = new Pane()
