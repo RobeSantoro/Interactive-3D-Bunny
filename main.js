@@ -10,10 +10,16 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 // AnimeJS
 import anime from 'animejs/lib/anime.es.js'
 
-// Import DAT GUI
-//import { GUI } from 'dat.gui'
+// Import Tweakpane
+import { Pane } from 'tweakpane'
 
-//console.log(dat)
+const PARAMS = {
+  useOrbitCamera: true,
+}
+
+const pane = new Pane()
+pane.addInput(PARAMS, 'useOrbitCamera')
+
 
 // Window. Sizes
 const sizes = {
@@ -27,9 +33,17 @@ const scene = new THREE.Scene()
 const canvas = document.querySelector('canvas.webgl')
 
 // Create a camera
-const camera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-camera.position.y = 0
-camera.position.z = 20
+let camera = null
+
+const orbitCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
+orbitCamera.position.y = 0
+orbitCamera.position.z = 20
+
+const staticCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
+staticCamera.position.y = 0
+staticCamera.position.z = 20
+
+camera = orbitCamera
 
 // Create a Camera Group
 const cameraGroup = new THREE.Group()
@@ -37,7 +51,7 @@ cameraGroup.add(camera)
 
 scene.add(cameraGroup)
 
-/* // Orbit controls
+// Orbit controls
 const controls = new OrbitControls(camera, canvas)
 controls.dampingFactor = 0.25
 controls.enableDamping = true
@@ -45,7 +59,7 @@ controls.enableZoom = true
 controls.enablePan = true
 controls.enableRotate = true
 controls.autoRotate = true
-controls.autoRotateSpeed = .01 */
+controls.autoRotateSpeed = .01
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -301,7 +315,14 @@ const animate = () => {
   FPS = Math.round(1 / deltaTime)
 
   // Update controls
-  //controls.update()
+  if (PARAMS.useOrbitCamera === true) {
+    camera = orbitCamera
+    handleResize()
+    controls.update()
+  } else {
+    camera = staticCamera
+    handleResize()
+  }
 
   // Render
   renderer.render(scene, camera)
@@ -316,14 +337,14 @@ const animate = () => {
 animate()
 
 // Listen to the resize of the window
-addEventListener('resize', () => {
+addEventListener('resize', handleResize())
 
+function handleResize() {
   sizes.width = innerWidth
   sizes.height = innerHeight
   camera.aspect = sizes.width / sizes.height
   camera.updateProjectionMatrix()
   renderer.setSize(sizes.width, sizes.height)
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-  renderer.render(scene, camera)
-
-})
+  renderer.render(scene, camera)  
+}
