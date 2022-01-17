@@ -2,13 +2,18 @@ import './style.css'
 
 import * as THREE from 'three'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Import GLTF loader
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 
 // AnimeJS
 import anime from 'animejs/lib/anime.es.js'
+
+// Import DAT GUI
+//import { GUI } from 'dat.gui'
+
+//console.log(dat)
 
 // Window. Sizes
 const sizes = {
@@ -72,30 +77,20 @@ scene.add(gridHelper) */
 const axisHelper = new THREE.AxesHelper(3)
 scene.add(axisHelper) */
 
-// Eyes
-let Root = null
-
-let NECK_joint = null
-let HeadJoint = null
-
-let LeftEye = null
-let RightEye = null
-
-// EYELIDs
-let Eyelids = null
-
-let LeftUpperEyeLid = null
-let RightUpperEyeLid = null
-let LeftLowerEyeLid = null
-let RightLowerEyeLid = null
-
-// Create Gltf loader
-const rabbitHead = new GLTFLoader()
-
 // Load the gltf
-rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
+new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   const rabbitScene = gltf.scene
+
+  const Root = rabbitScene.getObjectByName('Armature')
+  const NeckJoint = rabbitScene.getObjectByName('NECK_joint')
+  const HeadJoint = rabbitScene.getObjectByName('HEAD_joint')
+  const LeftEye = rabbitScene.getObjectByName('L_EYE_mesh')
+  const RightEye = rabbitScene.getObjectByName('R_EYE_mesh')
+  const LeftUpperEyeLid = rabbitScene.getObjectByName('L_EYE_UP_LID_mesh')
+  const RightUpperEyeLid = rabbitScene.getObjectByName('R_EYE_UP_LID_mesh')
+  const LeftLowerEyeLid = rabbitScene.getObjectByName('L_EYE_LW_LID_mesh')
+  const RightLowerEyeLid = rabbitScene.getObjectByName('R_EYE_LW_LID_mesh')
 
   rabbitScene.traverse((child) => {
 
@@ -103,53 +98,17 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
       console.log(child.name);
     } */
 
-    // Assign Envmap to all materials and activate the shadow casting
+    // Assign Envmap to all materials and activate the shadow casting except for the base
     if (child.isMesh) {
       child.material.envMap = envTexture
       child.material.envMapIntensity = 0.6
       child.material.needsUpdate = true
-      child.castShadow = true
-      child.receiveShadow = true
-    }
-
-    // Root
-    if (child.name === 'Armature') {
-      Root = child
-    }
-
-    if (child.name === 'NECK_joint' && child.isBone) {
-      NECK_joint = child
-    }
-
-    // Head Joint
-    if (child.name === 'HEAD_joint' && child.isBone) {
-      HeadJoint = child
-    }
-
-    // Eyes
-    if (child.name === 'L_EYE_mesh') {
-      LeftEye = child
-    }
-    if (child.name === 'R_EYE_mesh') {
-      RightEye = child
-    }
-
-    // Upper Left EyeLid
-    if (child.name === ('L_EYE_UP_LID_mesh')) {
-      LeftUpperEyeLid = child
-    }
-    // Upper Right EyeLid
-    if (child.name === ('R_EYE_UP_LID_mesh')) {
-      RightUpperEyeLid = child
-    }
-
-    // Lower Left EyeLid
-    if (child.name === ('L_EYE_LW_LID_mesh')) {
-      LeftLowerEyeLid = child
-    }
-    // Lower Right EyeLid
-    if (child.name === ('R_EYE_LW_LID_mesh')) {
-      RightLowerEyeLid = child
+      if (child.name === 'Base') {
+        child.receiveShadow = true
+      } else {
+        child.castShadow = true
+        child.receiveShadow = true
+      }
     }
 
   })
@@ -158,19 +117,18 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
   rabbitScene.rotation.y = THREE.Math.degToRad(180)
   rabbitScene.position.y = -1
   Root.position.y = -4.2
-  
+
   scene.add(rabbitScene)
 
-
-  // Animate the scene
+  /* Loading Animation */
+  // Animate the whole scene
   anime({
     targets: rabbitScene.position,
     y: 0,
     duration: 1500,
-    delay: 0,
+    delay: 200,
   })
-
-  // Loading Animation
+  // Animate the bunny's root
   anime({
     targets: Root.position,
     y: 0,
@@ -179,6 +137,7 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
     easing: 'easeOutElastic(1, .3)'
   })
 
+  /* Blink Animation */
   // Upper Blink animation
   anime({
     targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
@@ -189,7 +148,6 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
     loop: true,
     delay: 2500
   })
-
   // Lower Blink animation
   anime({
     targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
@@ -201,76 +159,20 @@ rabbitHead.load('./models/RabbitHead.glb', (gltf) => {
     delay: 2500
   })
 
+  // Listen to the mouse move
+
+  addEventListener('mousemove', function (e) {
+    var mousecoords = getMousePos(e)
+
+    OrientTowards(mousecoords, LeftEye, 60)
+    OrientTowards(mousecoords, RightEye, 60)
+    OrientTowards(mousecoords, NeckJoint, 15)
+    OrientTowards(mousecoords, HeadJoint, 20)
+
+  })
+
+
 })
-
-// Create a Pointlight
-const Pointlight = new THREE.PointLight(0xffffff, 1, 100)
-Pointlight.position.set(-2, 2, 5)
-scene.add(Pointlight)
-
-// Create a DirectionalLight and turn on shadows for the light
-const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
-directionallight.position.set(5, 10, -5)
-directionallight.castShadow = true // default false
-
-//Set up shadow properties for the directionallight
-directionallight.shadow.mapSize.width = 512 // default
-directionallight.shadow.mapSize.height = 512 // default
-directionallight.shadow.camera.near = 0.5 // default
-directionallight.shadow.camera.far = 500 // default
-directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
-
-scene.add(directionallight)
-
-/* LIGHT HELPERS
-// Create a helper for Point Light
-const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
-scene.add(pointLightHelper)
-//Create a helper for the shadow camera (optional)
-const helper = new THREE.CameraHelper( directionallight.shadow.camera )
-scene.add( helper )
-*/
-
-// Initialize the main loop
-const clock = new THREE.Clock()
-let lastElapsedTime = 0
-let FPS = 0
-
-// Stats
-const stats = new Stats()
-stats.showPanel(0)
-document.body.appendChild(stats.dom)
-
-// Create the main loop invoking the animate function
-const animate = () => {
-  const elapsedTime = clock.getElapsedTime()
-  const deltaTime = elapsedTime - lastElapsedTime
-  lastElapsedTime = elapsedTime
-
-  //FPS
-  FPS = Math.round(1 / deltaTime)
-
-  setTimeout( () => {
-    if (FPS < 60 && isMobile) {
-      alert('Your mobile is running slow. Consider using a faster computer.')
-    }
-  }, 2000);
-
-  // Update controls
-  //controls.update()
-
-  // Update stats
-  stats.update()
-
-  // Render
-  renderer.render(scene, camera)
-
-  // Call animate again on the next frame
-  requestAnimationFrame(animate)
-}
-
-animate()
-
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
@@ -339,6 +241,71 @@ function getMouseDegrees(x, y, degreeLimit) {
   return { x: dx, y: dy };
 }
 
+// Create a Pointlight
+const Pointlight = new THREE.PointLight(0xffffff, 1, 100)
+Pointlight.position.set(-2, 2, 5)
+scene.add(Pointlight)
+
+// Create a DirectionalLight and turn on shadows for the light
+const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
+directionallight.position.set(5, 10, -5)
+directionallight.castShadow = true // default false
+
+//Set up shadow properties for the directionallight
+directionallight.shadow.mapSize.width = 512 // default
+directionallight.shadow.mapSize.height = 512 // default
+directionallight.shadow.camera.near = 0.5 // default
+directionallight.shadow.camera.far = 500 // default
+directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
+
+scene.add(directionallight)
+
+/* LIGHT HELPERS
+// Create a helper for Point Light
+const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
+scene.add(pointLightHelper)
+//Create a helper for the shadow camera (optional)
+const helper = new THREE.CameraHelper( directionallight.shadow.camera )
+scene.add( helper )
+*/
+
+// Initialize the main loop
+const clock = new THREE.Clock()
+let lastElapsedTime = 0
+let FPS = 0
+
+// Stats
+const stats = new Stats()
+stats.showPanel(0)
+document.body.appendChild(stats.dom)
+
+// Create the main loop invoking the animate function
+const animate = () => {
+
+  stats.begin()
+
+  const elapsedTime = clock.getElapsedTime()
+  const deltaTime = elapsedTime - lastElapsedTime
+  lastElapsedTime = elapsedTime
+
+  //FPS
+  FPS = Math.round(1 / deltaTime)
+
+  // Update controls
+  //controls.update()
+
+  // Render
+  renderer.render(scene, camera)
+
+  // Update stats
+  stats.end()
+
+  // Call animate again on the next frame
+  requestAnimationFrame(animate)
+}
+
+animate()
+
 // Listen to the resize of the window
 addEventListener('resize', () => {
 
@@ -349,27 +316,5 @@ addEventListener('resize', () => {
   renderer.setSize(sizes.width, sizes.height)
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
   renderer.render(scene, camera)
-
-})
-
-// Listen to the mouse move
-addEventListener('mousemove', function (e) {
-  var mousecoords = getMousePos(e)
-
-  OrientTowards(mousecoords, LeftEye, 60)
-  OrientTowards(mousecoords, RightEye, 60)
-  OrientTowards(mousecoords, NECK_joint, 15)
-  OrientTowards(mousecoords, HeadJoint, 20)
-
-})
-
-// Listen to the touch move
-addEventListener('touchmove', function (e) {
-  var mousecoords = getMousePos(e)
-
-  OrientTowards(mousecoords, LeftEye, 60)
-  OrientTowards(mousecoords, RightEye, 60)
-  OrientTowards(mousecoords, NECK_joint, 15)
-  OrientTowards(mousecoords, HeadJoint, 20)
 
 })
