@@ -133,7 +133,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     targets: Root.position,
     y: 0,
     duration: 2000,
-    delay: 2000,
+    delay: 1500,
     easing: 'easeOutElastic(1, .3)'
   })
 
@@ -171,6 +171,16 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   })
 
+  // Listen to the touch move
+  addEventListener('touchmove', function (e) {
+    var touchcoords = getMousePos(e)
+
+    OrientTowards(touchcoords, LeftEye, 60)
+    OrientTowards(touchcoords, RightEye, 60)
+    OrientTowards(touchcoords, NeckJoint, 15)
+    OrientTowards(touchcoords, HeadJoint, 20)
+
+  })
 
 })
 
