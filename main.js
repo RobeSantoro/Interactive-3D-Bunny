@@ -76,8 +76,8 @@ renderer.render(scene, camera)
 renderer.outputEncoding = THREE.sRGBEncoding
 
 // Turn on shadow for the renderer
-renderer.shadowMap.enabled = true
-renderer.shadowMap.type = THREE.PCFSoftShadowMap
+// renderer.shadowMap.enabled = true
+// renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 // Load the environment texture
 const textureLoader = new THREE.TextureLoader()
@@ -113,16 +113,16 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     } */
 
     // Assign Envmap to all materials and activate the shadow casting except for the base
-    if (child.isMesh) {
+     if (child.isMesh) {
       child.material.envMap = envTexture
       child.material.envMapIntensity = 0.6
       child.material.needsUpdate = true
-      if (child.name === 'Base') {
+      /* if (child.name === 'Base') {
         child.receiveShadow = true
       } else {
         child.castShadow = true
         child.receiveShadow = true
-      }
+      } */
     }
 
   })
@@ -275,7 +275,7 @@ scene.add(Pointlight)
 // Create a DirectionalLight and turn on shadows for the light
 const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
 directionallight.position.set(5, 10, -5)
-directionallight.castShadow = true // default false
+/* directionallight.castShadow = true // default false
 
 //Set up shadow properties for the directionallight
 directionallight.shadow.mapSize.width = 512 // default
@@ -283,7 +283,7 @@ directionallight.shadow.mapSize.height = 512 // default
 directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
 directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
-
+ */
 scene.add(directionallight)
 
 /* LIGHT HELPERS
