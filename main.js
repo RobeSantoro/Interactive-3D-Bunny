@@ -53,13 +53,6 @@ scene.add(cameraGroup)
 
 // Orbit controls
 const controls = new OrbitControls(camera, canvas)
-controls.dampingFactor = 0.25
-controls.enableDamping = true
-controls.enableZoom = true
-controls.enablePan = true
-controls.enableRotate = true
-controls.autoRotate = true
-controls.autoRotateSpeed = .01
 
 // Renderer
 const renderer = new THREE.WebGLRenderer({
@@ -84,12 +77,13 @@ const textureLoader = new THREE.TextureLoader()
 const envTexture = textureLoader.load('./textures/garage_1k.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
-/*// Grid
- const gridHelper = new THREE.GridHelper(10, 10)
-scene.add(gridHelper) */
-/* //Axis Helpers
+/* GRID
+const gridHelper = new THREE.GridHelper(10, 10)
+scene.add(gridHelper)
+AXIS HELPER
 const axisHelper = new THREE.AxesHelper(3)
-scene.add(axisHelper) */
+scene.add(axisHelper)
+*/
 
 // Load the gltf
 new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
@@ -275,16 +269,16 @@ scene.add(Pointlight)
 // Create a DirectionalLight and turn on shadows for the light
 const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
 directionallight.position.set(5, 10, -5)
-/* directionallight.castShadow = true // default false
+scene.add(directionallight)
 
+/* CAST SHADOW
+directionallight.castShadow = true // default false
 //Set up shadow properties for the directionallight
 directionallight.shadow.mapSize.width = 512 // default
 directionallight.shadow.mapSize.height = 512 // default
 directionallight.shadow.camera.near = 0.5 // default
 directionallight.shadow.camera.far = 500 // default
 directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
- */
-scene.add(directionallight)
 
 /* LIGHT HELPERS
 // Create a helper for Point Light
@@ -307,7 +301,13 @@ const fpsdom = document.getElementById('FPS')
 const stats = new Stats()
 stats.showPanel(0)
 document.body.appendChild(stats.dom)
-console.log(stats)
+
+// Create a point object with a new key called position and a new key alement
+const point = 
+  {
+      position: new THREE.Vector3(0, -3.14, 3.14),
+      element: document.querySelector('.point')
+  }
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -331,6 +331,15 @@ const animate = () => {
     camera = staticCamera
     handleResize()
   }
+
+  // Update the point
+    
+  const screenPosition = point.position.clone()
+  screenPosition.project(camera)
+
+  const translateX = screenPosition.x * sizes.width * 0.5
+  const translateY = - screenPosition.y * sizes.height * 0.5
+  point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`
 
   // Render
   renderer.render(scene, camera)
