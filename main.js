@@ -346,7 +346,7 @@ animate()
 
 setTimeout(() => {
   fpsdom.innerHTML = "FPS " + Math.round(FPS)
-}, 3000)
+}, 5000)
 
 // Listen to the resize of the window
 addEventListener('resize', handleResize())
