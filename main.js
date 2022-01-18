@@ -65,13 +65,13 @@ controls.autoRotateSpeed = .01
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
-  alpha: false,
+  alpha: true,
   preserveDrawingBuffer: false,
   premultipliedAlpha: false
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-renderer.setClearColor(0x44337a, 0)
+//renderer.setClearColor(0x44337a, 0)
 renderer.render(scene, camera)
 renderer.outputEncoding = THREE.sRGBEncoding
 
@@ -129,9 +129,12 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   // Rotate the scene 180 degrees on the Y axis
   rabbitScene.rotation.y = THREE.Math.degToRad(180)
+
+  // Move the scene to the first frame for the Loading Animation
   rabbitScene.position.y = -1
   Root.position.y = -4.2
 
+  // Add the rabbitScene to the scene
   scene.add(rabbitScene)
 
   /* Loading Animation */
@@ -145,10 +148,10 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   // Animate the bunny's root
   anime({
     targets: Root.position,
-    y: 0,
+    y: -0.5,
     duration: 2000,
     delay: 1500,
-    easing: 'easeOutElastic(1, .3)'
+    easing: 'easeOutElastic(1, 0.2)'
   })
 
   /* Blink Animation */
@@ -314,7 +317,7 @@ const animate = () => {
   //FPS
   FPS = Math.round(1 / deltaTime)
 
-  // Update controls
+  // Update camera and controls
   if (PARAMS.useOrbitCamera === true) {
     camera = orbitCamera
     handleResize()
