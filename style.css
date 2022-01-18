@@ -1,10 +1,14 @@
-* {
+/* * {
   margin: 0;
   padding: 0;
-}
+} */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 html, body {
-  background: transparent;
   overflow: hidden;
 }
 
@@ -13,4 +17,5 @@ html, body {
   top: 0;
   left: 0;
   outline: none;
-}
+  z-index: -1;
+} 
