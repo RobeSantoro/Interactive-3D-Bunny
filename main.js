@@ -305,8 +305,8 @@ const fpsdom = document.getElementById('FPS')
 
 // Stats
 const stats = new Stats()
-//stats.showPanel(0)
-//document.body.appendChild(stats.dom)
+stats.showPanel(0)
+document.body.appendChild(stats.dom)
 console.log(stats)
 
 // Create the main loop invoking the animate function
