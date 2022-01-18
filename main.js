@@ -17,9 +17,9 @@ const PARAMS = {
   useOrbitCamera: false,
 }
 
-const pane = new Pane()
+/* const pane = new Pane()
 pane.addInput(PARAMS, 'useOrbitCamera')
-
+ */
 
 // Window. Sizes
 const sizes = {
@@ -300,10 +300,14 @@ const clock = new THREE.Clock()
 let lastElapsedTime = 0
 let FPS = 0
 
+// FPS DOM
+const fpsdom = document.getElementById('FPS')
+
 // Stats
 const stats = new Stats()
-stats.showPanel(0)
-document.body.appendChild(stats.dom)
+//stats.showPanel(0)
+//document.body.appendChild(stats.dom)
+console.log(stats)
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -316,6 +320,7 @@ const animate = () => {
 
   //FPS
   FPS = Math.round(1 / deltaTime)
+  //fpsdom.innerHTML = Math.round(FPS)
 
   // Update camera and controls
   if (PARAMS.useOrbitCamera === true) {
@@ -339,6 +344,10 @@ const animate = () => {
 
 animate()
 
+setTimeout(() => {
+  fpsdom.innerHTML = "FPS " + Math.round(FPS)
+}, 3000)
+
 // Listen to the resize of the window
 addEventListener('resize', handleResize())
 
@@ -349,5 +358,5 @@ function handleResize() {
   camera.updateProjectionMatrix()
   renderer.setSize(sizes.width, sizes.height)
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-  renderer.render(scene, camera)  
+  renderer.render(scene, camera)
 }
