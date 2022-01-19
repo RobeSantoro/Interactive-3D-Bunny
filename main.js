@@ -15,11 +15,10 @@ import anime from 'animejs/lib/anime.es.js'
 // Import Tweakpane
 import { Pane } from 'tweakpane'
 const PARAMS = {
-  useOrbitCamera: false,
-  eyesRotation: 0.0,
+  useOrbitCamera: false
 }
-const pane = new Pane()
-pane.addInput(PARAMS, 'useOrbitCamera')
+/* const pane = new Pane()
+pane.addInput(PARAMS, 'useOrbitCamera') */
 
 // Import Stats
 import Stats from 'three/examples/jsm/libs/stats.module.js'
@@ -39,7 +38,6 @@ const inputEmail = document.getElementById('Email')
 const inputPassword = document.getElementById('Password')
 const LoginButton = document.querySelector('#LoginButton')
 console.log(inputEmail, inputPassword, LoginButton)
-
 
 
 
@@ -189,9 +187,9 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
 
 
-  /*********************/
-  /* Loading Animation */
-  /*********************/
+  /***************************/
+  /* Loading Intro Animation */
+  /***************************/
 
   // Animate the whole scene
   anime({
@@ -202,12 +200,12 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   })
 
   // Animate the bunny's root
+  // easing: 'spring(mass, stiffness, damping, velocity)'
   anime({
     targets: Root.position,
-    y: -0.5,
-    duration: 2000,
+    y: -0.5,    
     delay: 1500,
-    easing: 'easeOutElastic(1, 0.2)'
+    easing: 'spring(1, 80, 10, 0)'
   })
 
 
