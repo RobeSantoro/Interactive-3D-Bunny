@@ -1,3 +1,7 @@
+/*-----------------------------------*/
+/*------------IMPORT-----------------*/
+/*-----------------------------------*/
+
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -12,9 +16,10 @@ import anime from 'animejs/lib/anime.es.js'
 import { Pane } from 'tweakpane'
 const PARAMS = {
   useOrbitCamera: false,
+  eyesRotation: 0.0,
 }
-/* const pane = new Pane()
-pane.addInput(PARAMS, 'useOrbitCamera') */
+const pane = new Pane()
+pane.addInput(PARAMS, 'useOrbitCamera')
 
 // Import Stats
 import Stats from 'three/examples/jsm/libs/stats.module.js'
@@ -24,16 +29,37 @@ import Stats from 'three/examples/jsm/libs/stats.module.js'
 stats.showPanel(0)
 document.body.appendChild(stats.dom) */
 
-// Window. Sizes
-const sizes = {
-  height: window.innerHeight,
-  width: window.innerWidth
-}
+
+
+/*******************/
+/* DOM REFERENCING */
+/*******************/
+
+const inputEmail = document.getElementById('Email')
+const inputPassword = document.getElementById('Password')
+const LoginButton = document.querySelector('#LoginButton')
+console.log(inputEmail, inputPassword, LoginButton)
+
+
+
+
+
+
+/******************/
+/* THREE.JS SETUP */
+/******************/
+
 // Create a scene
 const scene = new THREE.Scene()
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
+
+// Window. Sizes
+const sizes = {
+  height: window.innerHeight,
+  width: window.innerWidth
+}
 
 // Create a camera
 let camera = null
@@ -44,8 +70,9 @@ orbitCamera.position.z = 16
 orbitCamera.lookAt({ x: 0, y: 2, z: 0 })
 
 const staticCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-staticCamera.position.y = -1.5
+//staticCamera.position.y = -1.5
 staticCamera.position.z = 16
+staticCamera.lookAt(0, -1.5, 0)
 
 camera = orbitCamera
 scene.add(camera)
@@ -89,6 +116,20 @@ envTexture.mapping = THREE.EquirectangularReflectionMapping
 const bakedTexture = bakedTextureLoader.load('./textures/baked.jpg')
 bakedTexture.flipY = false */
 
+
+
+
+
+
+
+
+
+
+
+/*********************/
+/* GLTF MODEL LOADER */
+/*********************/
+
 // Load the gltf
 new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
@@ -109,20 +150,17 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     /* if (child.isBone) {
       console.log(child.name);
     } */
-    
+
     if (child.isMesh) {
 
       child.material.envMap = envTexture
       child.material.envMapIntensity = 1
       child.material.needsUpdate = true
 
-      // If the name not contains the word "EYE_mesh" assign baked texture to the diffuse map material
-      
+      // If the name not contains the word "EYE_mesh" assign baked texture to the diffuse map material      
       if (!child.name.includes('EYE_geo')) {
-        
         //child.material.map = bakedTexture
-        //child.material.needsUpdate = true
-        
+        //child.material.needsUpdate = true        
       }
 
       /* if (child.name === 'Base') {
@@ -145,7 +183,16 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   // Add the rabbitScene to the scene
   scene.add(rabbitScene)
 
+
+
+
+
+
+
+  /*********************/
   /* Loading Animation */
+  /*********************/
+
   // Animate the whole scene
   anime({
     targets: rabbitScene.position,
@@ -153,6 +200,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     duration: 1500,
     delay: 200,
   })
+
   // Animate the bunny's root
   anime({
     targets: Root.position,
@@ -162,7 +210,18 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     easing: 'easeOutElastic(1, 0.2)'
   })
 
+
+
+
+
+
+
+
+
+  /*******************/
   /* Blink Animation */
+  /*******************/
+
   // Upper Blink animation
   anime({
     targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
@@ -173,6 +232,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     loop: true,
     delay: 2500
   })
+
   // Lower Blink animation
   anime({
     targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
@@ -184,25 +244,108 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     delay: 2500
   })
 
+
+
+
+
+
+
+  /***************************/
+  /* Head Movement Animation */
+  /***************************/
+
+  let eyesFollowMouse = true
+
   // Listen to the mouse move
-  addEventListener('mousemove', function (e) {
+  addEventListener('mousemove', function (e) {    
     var mousecoords = getMousePos(e)
-    OrientTowards(LeftEye, mousecoords, 60)
-    OrientTowards(RightEye, mousecoords, 60)
+
+    if (eyesFollowMouse == true) {
+      OrientTowards(LeftEye, mousecoords, 60)
+      OrientTowards(RightEye, mousecoords, 60)
+    }
+
     OrientTowards(NeckJoint, mousecoords, 15)
     OrientTowards(HeadJoint, mousecoords, 20)
+
   })
 
   // Listen to the touch move
-  addEventListener('touchmove', function (e) {    
+  addEventListener('touchmove', function (e) {
     var touchcoords = getTouchPos(e)
-    OrientTowards(LeftEye, touchcoords, 60)
-    OrientTowards(RightEye, touchcoords, 60)
+
+    if (eyesFollowMouse == true) {
+      OrientTowards(LeftEye, touchcoords, 60)
+      OrientTowards(RightEye, touchcoords, 60)
+    }
+
     OrientTowards(NeckJoint, touchcoords, 15)
     OrientTowards(HeadJoint, touchcoords, 20)
+
   })
 
+
+
+
+
+
+
+
+
+  /******************************/
+  /* EMAIL INPUT FORM ANIMATION */
+  /******************************/
+
+  // When the user interact with email input
+  if (inputEmail.attachEvent) inputEmail.attachEvent('focus', focusOnMail);
+  else inputEmail.addEventListener('focus', focusOnMail);
+
+  if (inputEmail.attachEvent) inputEmail.attachEvent('focusout', focusOutMail);
+  else inputEmail.addEventListener('focusout', focusOutMail);
+
+  if (inputEmail.attachEvent) inputEmail.attachEvent('input', focusOnMail);
+  else inputEmail.addEventListener('input', focusOnMail);
+
+  if (inputEmail.attachEvent) inputEmail.attachEvent('click', focusOnMail);
+  else inputEmail.addEventListener('click', focusOnMail);
+
+  function focusOnMail() {
+    eyesFollowMouse = false
+
+    // Get the length of the email input
+    let inputMailLength = inputEmail.value.length;
+
+    // Move eyes to the beginning of the email input
+    // and add inputMailLength as an offset    
+    anime({
+      targets: [LeftEye.rotation, RightEye.rotation],
+      x: (-Math.PI / 2) + 0.5,
+      y: (-Math.PI / 2) + inputMailLength * 0.025 + 1,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+  }
+
+  function focusOutMail() {
+    eyesFollowMouse = true
+  }
+
+
+
+
+
+
+
 })
+
+
+
+
+
+
+/********************/
+/****** LIGHTS ******/
+/********************/
 
 // Create a Pointlight
 const Pointlight = new THREE.PointLight(0xffffff, 1.5, 100)
@@ -223,11 +366,11 @@ let FPS = 0
 const fpsdom = document.getElementById('FPS')
 
 // Create a point object with a new key position and a new key alement
-const point = 
-  {
-      position: new THREE.Vector3(0, -0.8, 3.14),
-      element: document.querySelector('.point')
-  }
+const point =
+{
+  position: new THREE.Vector3(0, -0.8, 3.14),
+  element: document.querySelector('.point')
+}
 
 /* // Create a sphere representing the point
 const sphere = new THREE.SphereGeometry(0.1, 32, 32)
@@ -236,6 +379,17 @@ const spheremesh = new THREE.Mesh(sphere, material)
 // Set the position of the sphere to the position of the point
 spheremesh.position.copy(point.position)
 scene.add(spheremesh) */
+
+
+
+
+
+
+
+
+/******************************/
+/****** ANIMATE FUNCTION ******/
+/******************************/
 
 // Create the main loop invoking the animate function
 const animate = () => {
@@ -247,7 +401,7 @@ const animate = () => {
   lastElapsedTime = elapsedTime
 
   //FPS
-  FPS = Math.round(1 / deltaTime)  
+  FPS = Math.round(1 / deltaTime)
 
   // Update camera and controls
   if (PARAMS.useOrbitCamera === true) {
@@ -263,11 +417,11 @@ const animate = () => {
   const screenPosition = point.position.clone()
   screenPosition.project(camera)
 
-  const translateX = sizes.width /2 //screenPosition.x * sizes.width * 0.5
+  const translateX = sizes.width / 2 //screenPosition.x * sizes.width * 0.5
   const translateY = - screenPosition.y * sizes.height * 0.5
   point.element.style.transform = `translateY(${translateY}px)`
 
-  // Render
+  // Render the scene
   renderer.render(scene, camera)
 
   // Update stats
@@ -278,6 +432,13 @@ const animate = () => {
 }
 
 animate()
+
+
+
+/*-----------------------------------------*/
+/*----------- RESIZE EVENT ----------------*/
+/*-----------------------------------------*/
+
 
 // Listen to the resize of the window
 addEventListener('resize', handleResize())
@@ -291,13 +452,16 @@ function handleResize() {
   renderer.render(scene, camera)
 }
 
+/*---------------------------------------------*/
+/*------------UTLITY FUNCTIONS-----------------*/
+/*---------------------------------------------*/
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
-} 
+}
 
 function getTouchPos(e) {
-  return { x: e.touches[0].clientX, y: e.touches[0].clientY }  
+  return { x: e.touches[0].clientX, y: e.touches[0].clientY }
 }
 
 function OrientTowards(object, lookAt, degreeLimit) {
@@ -306,20 +470,20 @@ function OrientTowards(object, lookAt, degreeLimit) {
   object.rotation.x = THREE.Math.degToRad(degrees.y)
 }
 
-/* https://tympanus.net/codrops/2019/10/14/how-to-create-an-interactive-3d-character-with-three-js/
-
-getMouseDegrees does this: It checks the top half of the screen,
-the bottom half of the screen, the left half of the screen,
-and the right half of the screen. It determines where the mouse
-is on the screen in a percentage between the middle and each edge of the screen.
-For instance, if the mouse is half way between the middle of the
-screen and the right edge. The function determines that right = 50%,
-if the mouse is a quarter of the way UP from the center, the function determines that up = 25%.
-Once the function has these percentages, it returns the percentage of the degreelimit.
-So the function can determine your mouse is 75% right and 50% up,
-and return 75% of the degree limit on the x axis and 50% of the degree limit on the y axis.
-Same for left and right. */
 function getMouseDegrees(x, y, degreeLimit) {
+  /* https://tympanus.net/codrops/2019/10/14/how-to-create-an-interactive-3d-character-with-three-js/
+
+  getMouseDegrees does this: It checks the top half of the screen,
+  the bottom half of the screen, the left half of the screen,
+  and the right half of the screen. It determines where the mouse
+  is on the screen in a percentage between the middle and each edge of the screen.
+  For instance, if the mouse is half way between the middle of the
+  screen and the right edge. The function determines that right = 50%,
+  if the mouse is a quarter of the way UP from the center, the function determines that up = 25%.
+  Once the function has these percentages, it returns the percentage of the degreelimit.
+  So the function can determine your mouse is 75% right and 50% up,
+  and return 75% of the degree limit on the x axis and 50% of the degree limit on the y axis.
+  Same for left and right. */
   let dx = 0,
     dy = 0,
     xdiff,
