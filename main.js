@@ -1,7 +1,5 @@
 import './style.css'
-
 import * as THREE from 'three'
-import Stats from 'three/examples/jsm/libs/stats.module.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 // Import GLTF loader
@@ -12,14 +10,19 @@ import anime from 'animejs/lib/anime.es.js'
 
 // Import Tweakpane
 import { Pane } from 'tweakpane'
-
 const PARAMS = {
   useOrbitCamera: false,
 }
-
 /* const pane = new Pane()
-pane.addInput(PARAMS, 'useOrbitCamera')
- */
+pane.addInput(PARAMS, 'useOrbitCamera') */
+
+// Import Stats
+import Stats from 'three/examples/jsm/libs/stats.module.js'
+
+// Stats
+/* const stats = new Stats()
+stats.showPanel(0)
+document.body.appendChild(stats.dom) */
 
 // Window. Sizes
 const sizes = {
@@ -36,20 +39,16 @@ const canvas = document.querySelector('canvas.webgl')
 let camera = null
 
 const orbitCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-orbitCamera.position.y = 0
-orbitCamera.position.z = 20
+orbitCamera.position.y = 2
+orbitCamera.position.z = 16
+orbitCamera.lookAt({ x: 0, y: 2, z: 0 })
 
 const staticCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
-staticCamera.position.y = 0
-staticCamera.position.z = 20
+staticCamera.position.y = -1.5
+staticCamera.position.z = 16
 
 camera = orbitCamera
-
-// Create a Camera Group
-const cameraGroup = new THREE.Group()
-cameraGroup.add(camera)
-
-scene.add(cameraGroup)
+scene.add(camera)
 
 // Orbit controls
 const controls = new OrbitControls(camera, canvas)
@@ -72,18 +71,23 @@ renderer.outputEncoding = THREE.sRGBEncoding
 // renderer.shadowMap.enabled = true
 // renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
+/* GRID
+const gridHelper = new THREE.GridHelper(10, 10)
+scene.add(gridHelper)
+// AXIS HELPER
+const axisHelper = new THREE.AxesHelper(3)
+scene.add(axisHelper)
+*/
+
 // Load the environment texture
 const textureLoader = new THREE.TextureLoader()
 const envTexture = textureLoader.load('./textures/garage_1k.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
-/* GRID
-const gridHelper = new THREE.GridHelper(10, 10)
-scene.add(gridHelper)
-AXIS HELPER
-const axisHelper = new THREE.AxesHelper(3)
-scene.add(axisHelper)
-*/
+// Load the backed texture
+/* const bakedTextureLoader = new THREE.TextureLoader()
+const bakedTexture = bakedTextureLoader.load('./textures/baked.jpg')
+bakedTexture.flipY = false */
 
 // Load the gltf
 new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
@@ -105,12 +109,22 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     /* if (child.isBone) {
       console.log(child.name);
     } */
+    
+    if (child.isMesh) {
 
-    // Assign Envmap to all materials and activate the shadow casting except for the base
-     if (child.isMesh) {
       child.material.envMap = envTexture
-      child.material.envMapIntensity = 0.6
+      child.material.envMapIntensity = 1
       child.material.needsUpdate = true
+
+      // If the name not contains the word "EYE_mesh" assign baked texture to the diffuse map material
+      
+      if (!child.name.includes('EYE_geo')) {
+        
+        //child.material.map = bakedTexture
+        //child.material.needsUpdate = true
+        
+      }
+
       /* if (child.name === 'Base') {
         child.receiveShadow = true
       } else {
@@ -173,22 +187,110 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   // Listen to the mouse move
   addEventListener('mousemove', function (e) {
     var mousecoords = getMousePos(e)
-    OrientTowards(mousecoords, LeftEye, 60)
-    OrientTowards(mousecoords, RightEye, 60)
-    OrientTowards(mousecoords, NeckJoint, 15)
-    OrientTowards(mousecoords, HeadJoint, 20)
+    OrientTowards(LeftEye, mousecoords, 60)
+    OrientTowards(RightEye, mousecoords, 60)
+    OrientTowards(NeckJoint, mousecoords, 15)
+    OrientTowards(HeadJoint, mousecoords, 20)
   })
 
   // Listen to the touch move
   addEventListener('touchmove', function (e) {    
     var touchcoords = getTouchPos(e)
-    OrientTowards(touchcoords, LeftEye, 60)
-    OrientTowards(touchcoords, RightEye, 60)
-    OrientTowards(touchcoords, NeckJoint, 15)
-    OrientTowards(touchcoords, HeadJoint, 20)
+    OrientTowards(LeftEye, touchcoords, 60)
+    OrientTowards(RightEye, touchcoords, 60)
+    OrientTowards(NeckJoint, touchcoords, 15)
+    OrientTowards(HeadJoint, touchcoords, 20)
   })
 
 })
+
+// Create a Pointlight
+const Pointlight = new THREE.PointLight(0xffffff, 1.5, 100)
+Pointlight.position.set(-2, 2, 5)
+scene.add(Pointlight)
+
+// LIGHT HELPERS
+// Create a helper for Point Light
+const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
+//scene.add(pointLightHelper)
+
+// Initialize the main loop
+const clock = new THREE.Clock()
+let lastElapsedTime = 0
+let FPS = 0
+
+// FPS DOM
+const fpsdom = document.getElementById('FPS')
+
+// Create a point object with a new key position and a new key alement
+const point = 
+  {
+      position: new THREE.Vector3(0, -0.8, 3.14),
+      element: document.querySelector('.point')
+  }
+
+/* // Create a sphere representing the point
+const sphere = new THREE.SphereGeometry(0.1, 32, 32)
+const material = new THREE.MeshBasicMaterial({ color: 0xffffff })
+const spheremesh = new THREE.Mesh(sphere, material)
+// Set the position of the sphere to the position of the point
+spheremesh.position.copy(point.position)
+scene.add(spheremesh) */
+
+// Create the main loop invoking the animate function
+const animate = () => {
+
+  //stats.begin()
+
+  const elapsedTime = clock.getElapsedTime()
+  const deltaTime = elapsedTime - lastElapsedTime
+  lastElapsedTime = elapsedTime
+
+  //FPS
+  FPS = Math.round(1 / deltaTime)  
+
+  // Update camera and controls
+  if (PARAMS.useOrbitCamera === true) {
+    camera = orbitCamera
+    handleResize()
+    controls.update()
+  } else {
+    camera = staticCamera
+    handleResize()
+  }
+
+  // Update the point position    
+  const screenPosition = point.position.clone()
+  screenPosition.project(camera)
+
+  const translateX = sizes.width /2 //screenPosition.x * sizes.width * 0.5
+  const translateY = - screenPosition.y * sizes.height * 0.5
+  point.element.style.transform = `translateY(${translateY}px)`
+
+  // Render
+  renderer.render(scene, camera)
+
+  // Update stats
+  //stats.end()
+
+  // Call animate again on the next frame
+  requestAnimationFrame(animate)
+}
+
+animate()
+
+// Listen to the resize of the window
+addEventListener('resize', handleResize())
+function handleResize() {
+  sizes.width = innerWidth
+  sizes.height = innerHeight
+  camera.aspect = sizes.width / sizes.height
+  camera.updateProjectionMatrix()
+  renderer.setSize(sizes.width, sizes.height)
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
+  renderer.render(scene, camera)
+}
+
 
 function getMousePos(e) {
   return { x: e.clientX, y: e.clientY }
@@ -198,7 +300,7 @@ function getTouchPos(e) {
   return { x: e.touches[0].clientX, y: e.touches[0].clientY }  
 }
 
-function OrientTowards(lookAt, object, degreeLimit) {
+function OrientTowards(object, lookAt, degreeLimit) {
   let degrees = getMouseDegrees(lookAt.x, lookAt.y, degreeLimit)
   object.rotation.y = THREE.Math.degToRad(degrees.x)
   object.rotation.x = THREE.Math.degToRad(degrees.y)
@@ -259,113 +361,4 @@ function getMouseDegrees(x, y, degreeLimit) {
     dy = (degreeLimit * yPercentage) / 100 * -1;
   }
   return { x: dx, y: dy };
-}
-
-// Create a Pointlight
-const Pointlight = new THREE.PointLight(0xffffff, 1, 100)
-Pointlight.position.set(-2, 2, 5)
-scene.add(Pointlight)
-
-// Create a DirectionalLight and turn on shadows for the light
-const directionallight = new THREE.DirectionalLight(0xffffff, 1, 100)
-directionallight.position.set(5, 10, -5)
-scene.add(directionallight)
-
-/* CAST SHADOW
-directionallight.castShadow = true // default false
-//Set up shadow properties for the directionallight
-directionallight.shadow.mapSize.width = 512 // default
-directionallight.shadow.mapSize.height = 512 // default
-directionallight.shadow.camera.near = 0.5 // default
-directionallight.shadow.camera.far = 500 // default
-directionallight.shadow.camera = new THREE.OrthographicCamera(-10, 10, 10, -10, .5, 500)
-
-/* LIGHT HELPERS
-// Create a helper for Point Light
-const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
-scene.add(pointLightHelper)
-//Create a helper for the shadow camera (optional)
-const helper = new THREE.CameraHelper( directionallight.shadow.camera )
-scene.add( helper )
-*/
-
-// Initialize the main loop
-const clock = new THREE.Clock()
-let lastElapsedTime = 0
-let FPS = 0
-
-// FPS DOM
-const fpsdom = document.getElementById('FPS')
-
-// Stats
-const stats = new Stats()
-stats.showPanel(0)
-document.body.appendChild(stats.dom)
-
-// Create a point object with a new key called position and a new key alement
-const point = 
-  {
-      position: new THREE.Vector3(0, -3.14, 3.14),
-      element: document.querySelector('.point')
-  }
-
-// Create the main loop invoking the animate function
-const animate = () => {
-
-  stats.begin()
-
-  const elapsedTime = clock.getElapsedTime()
-  const deltaTime = elapsedTime - lastElapsedTime
-  lastElapsedTime = elapsedTime
-
-  //FPS
-  FPS = Math.round(1 / deltaTime)
-  //fpsdom.innerHTML = Math.round(FPS)
-
-  // Update camera and controls
-  if (PARAMS.useOrbitCamera === true) {
-    camera = orbitCamera
-    handleResize()
-    controls.update()
-  } else {
-    camera = staticCamera
-    handleResize()
-  }
-
-  // Update the point
-    
-  const screenPosition = point.position.clone()
-  screenPosition.project(camera)
-
-  const translateX = screenPosition.x * sizes.width * 0.5
-  const translateY = - screenPosition.y * sizes.height * 0.5
-  point.element.style.transform = `translateX(${translateX}px) translateY(${translateY}px)`
-
-  // Render
-  renderer.render(scene, camera)
-
-  // Update stats
-  stats.end()
-
-  // Call animate again on the next frame
-  requestAnimationFrame(animate)
-}
-
-animate()
-
-setTimeout(() => {
-  fpsdom.innerHTML = "FPS " + Math.round(FPS)
-}, 5000)
-
-// Listen to the resize of the window
-addEventListener('resize', handleResize())
-
-function handleResize() {
-  sizes.width = innerWidth
-  sizes.height = innerHeight
-  camera.aspect = sizes.width / sizes.height
-  camera.updateProjectionMatrix()
-  renderer.setSize(sizes.width, sizes.height)
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-  renderer.render(scene, camera)
 }
