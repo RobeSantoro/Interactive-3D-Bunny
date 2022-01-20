@@ -37,7 +37,7 @@ document.body.appendChild(stats.dom) */
 const inputEmail = document.getElementById('Email')
 const inputPassword = document.getElementById('Password')
 const LoginButton = document.querySelector('#LoginButton')
-console.log(inputEmail, inputPassword, LoginButton)
+
 
 
 
@@ -155,12 +155,13 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
       child.material.envMapIntensity = 1
       child.material.needsUpdate = true
 
-      // If the name not contains the word "EYE_mesh" assign baked texture to the diffuse map material      
+      // If the name not contains "EYE_mesh" assign bakedtexture to the diffuse map      
       if (!child.name.includes('EYE_geo')) {
         //child.material.map = bakedTexture
         //child.material.needsUpdate = true        
       }
 
+      // Shadow
       /* if (child.name === 'Base') {
         child.receiveShadow = true
       } else {
@@ -252,13 +253,13 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   /* Head Movement Animation */
   /***************************/
 
-  let eyesFollowMouse = true
+  let eyesCanFollowMouse = true
 
   // Listen to the mouse move
   addEventListener('mousemove', function (e) {    
     var mousecoords = getMousePos(e)
 
-    if (eyesFollowMouse == true) {
+    if (eyesCanFollowMouse == true) {
       OrientTowards(LeftEye, mousecoords, 60)
       OrientTowards(RightEye, mousecoords, 60)
     }
@@ -272,7 +273,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   addEventListener('touchmove', function (e) {
     var touchcoords = getTouchPos(e)
 
-    if (eyesFollowMouse == true) {
+    if (eyesCanFollowMouse == true) {
       OrientTowards(LeftEye, touchcoords, 60)
       OrientTowards(RightEye, touchcoords, 60)
     }
@@ -296,43 +297,97 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   // When the user interact with email input
   if (inputEmail.attachEvent) inputEmail.attachEvent('focus', focusOnMail);
-  else inputEmail.addEventListener('focus', focusOnMail);
+  else inputEmail.addEventListener('focus', focusOnMail)
 
   if (inputEmail.attachEvent) inputEmail.attachEvent('focusout', focusOutMail);
-  else inputEmail.addEventListener('focusout', focusOutMail);
+  else inputEmail.addEventListener('focusout', focusOutMail)
 
   if (inputEmail.attachEvent) inputEmail.attachEvent('input', focusOnMail);
-  else inputEmail.addEventListener('input', focusOnMail);
+  else inputEmail.addEventListener('input', focusOnMail)
 
   if (inputEmail.attachEvent) inputEmail.attachEvent('click', focusOnMail);
-  else inputEmail.addEventListener('click', focusOnMail);
+  else inputEmail.addEventListener('click', focusOnMail)
 
   function focusOnMail() {
-    eyesFollowMouse = false
+    eyesCanFollowMouse = false
 
     // Get the length of the email input
-    let inputMailLength = inputEmail.value.length;
+    let inputMailLength = inputEmail.value.length
 
     // Move eyes to the beginning of the email input
-    // and add inputMailLength as an offset    
+    // and add inputMail Length as an offset    
     anime({
       targets: [LeftEye.rotation, RightEye.rotation],
       x: (-Math.PI / 2) + 0.5,
-      y: (-Math.PI / 2) + inputMailLength * 0.025 + 1,
+      y: (-Math.PI / 2) + inputMailLength * 0.045 +1,
       duration: 150,
       easing: 'easeOutElastic(1, .8)'
     })
   }
 
   function focusOutMail() {
-    eyesFollowMouse = true
+    eyesCanFollowMouse = true
   }
 
+  /*********************************/
+  /* PASSWORD INPUT FORM ANIMATION */
+  /*********************************/
 
+    // When the user interact with email input
+    if (inputPassword.attachEvent) inputPassword.attachEvent('focus', focusOnPassword);
+    else inputPassword.addEventListener('focus', focusOnPassword)
+  
+    if (inputPassword.attachEvent) inputPassword.attachEvent('focusout', focusOutPassword);
+    else inputPassword.addEventListener('focusout', focusOutPassword)
+  
+    if (inputPassword.attachEvent) inputPassword.attachEvent('input', focusOnPassword);
+    else inputPassword.addEventListener('input', focusOnPassword)
+  
+    if (inputPassword.attachEvent) inputPassword.attachEvent('click', focusOnPassword);
+    else inputPassword.addEventListener('click', focusOnPassword)
 
+    // ON PASSWORD
+    function focusOnPassword() {console.log('focusOnPassword')
+      eyesCanFollowMouse = false
 
+      // Get the length of the password input
+      let inputPasswordLength = inputPassword.value.length
+      
+      // Move eyes to the beginning of the password input
+      // and add inputPassword Length as an offset
 
+      anime({
+        targets: [LeftEye.rotation, RightEye.rotation],
+        x: (-Math.PI / 2)- +.5,
+        y: (-Math.PI / 2) + inputPasswordLength * 0.045 +1,
+        duration: 150,
+        easing: 'easeOutElastic(1, .8)'
+      })
 
+      // Move the head down on the Y axis
+      anime({
+        targets: Root.position,
+        y: -1.5,
+        duration: 150,
+        easing: 'easeOutElastic(1, .8)'
+      })
+    }
+
+    // OUT PASSWORD
+    function focusOutPassword() {console.log('focusOutPassword')
+      eyesCanFollowMouse = true
+
+      // Move the head up on the Y axis
+      anime({
+        targets: Root.position,
+        y: -0.5,
+        duration: 150,
+        easing: 'easeOutElastic(1, .8)'
+      })
+      
+    }
+
+    console.log(HeadJoint.rotation)
 
 })
 
@@ -377,7 +432,6 @@ const spheremesh = new THREE.Mesh(sphere, material)
 // Set the position of the sphere to the position of the point
 spheremesh.position.copy(point.position)
 scene.add(spheremesh) */
-
 
 
 
