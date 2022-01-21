@@ -1,4 +1,4 @@
 export default {
-  assetsInclude: ['**/*.glb'],
+  assetsInclude: ['**/*.glb', '**/*.wasm'],
   publicDir: ['public'],
 }
