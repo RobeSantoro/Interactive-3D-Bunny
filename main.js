@@ -204,7 +204,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   // easing: 'spring(mass, stiffness, damping, velocity)'
   anime({
     targets: Root.position,
-    y: -0.5,    
+    y: -0.5,
     delay: 1500,
     easing: 'spring(1, 80, 10, 0)'
   })
@@ -221,28 +221,40 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   /* Blink Animation */
   /*******************/
 
-  // Upper Blink animation
-  anime({
-    targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
-    x: (-Math.PI / 2) + 0.01,
-    duration: 100,
-    easing: 'linear',
-    direction: 'alternate',
-    loop: true,
-    delay: 2500
-  })
+  let canBlink = null
 
-  // Lower Blink animation
-  anime({
-    targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
-    x: Math.PI / 8,
-    duration: 100,
-    easing: 'linear',
-    direction: 'alternate',
-    loop: true,
-    delay: 2500
-  })
+  function Blink() {
+    if (canBlink == true) {
 
+      // Upper Blink animation
+      anime({
+        targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+        x: (-Math.PI / 2) + 0.01,
+        duration: 80,
+        easing: 'linear',
+        direction: 'alternate',
+
+
+      })
+
+      console.log(`I'm blinking`)
+      console.log(canBlink)
+
+      // Lower Blink animation
+      anime({
+        targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
+        x: Math.PI / 8,
+        duration: 80,
+        easing: 'linear',
+        direction: 'alternate',
+
+
+      })
+    }
+  }
+
+  // Start the blink animation and repeat it every 1 seconds
+  canBlink = true
 
 
 
@@ -254,9 +266,18 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   /***************************/
 
   let eyesCanFollowMouse = true
+  let headCanFollowMouse = true
+
+  function followMouse() {
+
+  }
+
 
   // Listen to the mouse move
-  addEventListener('mousemove', function (e) {    
+  addEventListener('mousemove', function (e) {
+
+    canBlink = true
+
     var mousecoords = getMousePos(e)
 
     if (eyesCanFollowMouse == true) {
@@ -264,8 +285,10 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
       OrientTowards(RightEye, mousecoords, 60)
     }
 
-    OrientTowards(NeckJoint, mousecoords, 15)
-    OrientTowards(HeadJoint, mousecoords, 20)
+    if (headCanFollowMouse == true) {
+      OrientTowards(NeckJoint, mousecoords, 15)
+      OrientTowards(HeadJoint, mousecoords, 20)
+    }
 
   })
 
@@ -273,13 +296,17 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   addEventListener('touchmove', function (e) {
     var touchcoords = getTouchPos(e)
 
+    canBlink = true
+
     if (eyesCanFollowMouse == true) {
       OrientTowards(LeftEye, touchcoords, 60)
       OrientTowards(RightEye, touchcoords, 60)
     }
 
-    OrientTowards(NeckJoint, touchcoords, 15)
-    OrientTowards(HeadJoint, touchcoords, 20)
+    if (headCanFollowMouse == true) {
+      OrientTowards(NeckJoint, touchcoords, 15)
+      OrientTowards(HeadJoint, touchcoords, 20)
+    }
 
   })
 
@@ -310,6 +337,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   function focusOnMail() {
     eyesCanFollowMouse = false
+    canBlink = false
 
     // Get the length of the email input
     let inputMailLength = inputEmail.value.length
@@ -319,78 +347,111 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     anime({
       targets: [LeftEye.rotation, RightEye.rotation],
       x: (-Math.PI / 2) + 0.5,
-      y: (-Math.PI / 2) + inputMailLength * 0.045 +1,
+      y: (-Math.PI / 2) + inputMailLength * 0.045 + 1,
       duration: 150,
       easing: 'easeOutElastic(1, .8)'
     })
+
+    // Rotate the EyeLids on the X axis
+    anime({
+      targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+      x: (-Math.PI / 2) + 0.5,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
+
   }
 
   function focusOutMail() {
     eyesCanFollowMouse = true
+    canBlink = true
+
+    // Rotates the EyeLids back to the original position
+    anime({
+      targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+      x: 0,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
   }
 
   /*********************************/
   /* PASSWORD INPUT FORM ANIMATION */
   /*********************************/
 
-    // When the user interact with email input
-    if (inputPassword.attachEvent) inputPassword.attachEvent('focus', focusOnPassword);
-    else inputPassword.addEventListener('focus', focusOnPassword)
-  
-    if (inputPassword.attachEvent) inputPassword.attachEvent('focusout', focusOutPassword);
-    else inputPassword.addEventListener('focusout', focusOutPassword)
-  
-    if (inputPassword.attachEvent) inputPassword.attachEvent('input', focusOnPassword);
-    else inputPassword.addEventListener('input', focusOnPassword)
-  
-    if (inputPassword.attachEvent) inputPassword.attachEvent('click', focusOnPassword);
-    else inputPassword.addEventListener('click', focusOnPassword)
+  // When the user interact with email input
+  if (inputPassword.attachEvent) inputPassword.attachEvent('focus', focusOnPassword);
+  else inputPassword.addEventListener('focus', focusOnPassword)
 
-    // ON PASSWORD
-    function focusOnPassword() {console.log('focusOnPassword')
-      eyesCanFollowMouse = false
+  if (inputPassword.attachEvent) inputPassword.attachEvent('focusout', focusOutPassword);
+  else inputPassword.addEventListener('focusout', focusOutPassword)
 
-      // Get the length of the password input
-      let inputPasswordLength = inputPassword.value.length
-      
-      // Move eyes to the beginning of the password input
-      // and add inputPassword Length as an offset
+  if (inputPassword.attachEvent) inputPassword.attachEvent('input', focusOnPassword);
+  else inputPassword.addEventListener('input', focusOnPassword)
 
-      anime({
-        targets: [LeftEye.rotation, RightEye.rotation],
-        x: (-Math.PI / 2)- +.5,
-        y: (-Math.PI / 2) + inputPasswordLength * 0.045 +1,
-        duration: 150,
-        easing: 'easeOutElastic(1, .8)'
-      })
+  if (inputPassword.attachEvent) inputPassword.attachEvent('click', focusOnPassword);
+  else inputPassword.addEventListener('click', focusOnPassword)
 
-      // Move the head down on the Y axis
-      anime({
-        targets: Root.position,
-        y: -1.5,
-        duration: 150,
-        easing: 'easeOutElastic(1, .8)'
-      })
-    }
+  // ON PASSWORD
+  function focusOnPassword() {
+    console.log('focusOnPassword')
+    eyesCanFollowMouse = false
+    headCanFollowMouse = false
 
-    // OUT PASSWORD
-    function focusOutPassword() {console.log('focusOutPassword')
-      eyesCanFollowMouse = true
+    // Get the length of the password input
+    let inputPasswordLength = inputPassword.value.length
 
-      // Move the head up on the Y axis
-      anime({
-        targets: Root.position,
-        y: -0.5,
-        duration: 150,
-        easing: 'easeOutElastic(1, .8)'
-      })
-      
-    }
+    // Move eyes to the beginning of the password input
+    // and add inputPasswordLength as an offset
 
-    console.log(HeadJoint.rotation)
+    anime({
+      targets: [LeftEye.rotation, RightEye.rotation],
+      x: 0,
+      y: 0,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
+    // Move the NeckJoint down on the Y axis
+    anime({
+      targets: NeckJoint.position,
+      y: -1.3,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+    
+    // Rotate the HeadJoint on the X axis
+    anime({
+      targets: HeadJoint.rotation,
+      x: 0.3,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
+
+  }
+
+  // OUT PASSWORD
+  function focusOutPassword() {
+    eyesCanFollowMouse = true
+    headCanFollowMouse = true
+
+    // Move the NeckJoint up on the Y axis
+    anime({
+      targets: NeckJoint.position,
+      y: -0.626,
+      duration: 150,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
+  }
+
+
+  console.log(NeckJoint.position)
 
 })
-
 
 
 
