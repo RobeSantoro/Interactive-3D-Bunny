@@ -6,8 +6,10 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
-// Import GLTF loader
+// Import GLTF and DRACO loader
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+
 
 // AnimeJS
 import anime from 'animejs/lib/anime.es.js'
@@ -17,8 +19,8 @@ import { Pane } from 'tweakpane'
 const PARAMS = {
   useOrbitCamera: false
 }
-/* const pane = new Pane()
-pane.addInput(PARAMS, 'useOrbitCamera') */
+const pane = new Pane()
+pane.addInput(PARAMS, 'useOrbitCamera')
 
 // Import Stats
 import Stats from 'three/examples/jsm/libs/stats.module.js'
@@ -88,9 +90,10 @@ const renderer = new THREE.WebGLRenderer({
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
-//renderer.setClearColor(0x44337a, 0)
+renderer.setClearColor(0x44337a, 0)
 renderer.render(scene, camera)
 renderer.outputEncoding = THREE.sRGBEncoding
+
 
 // Turn on shadow for the renderer
 // renderer.shadowMap.enabled = true
@@ -110,17 +113,24 @@ const envTexture = textureLoader.load('./textures/garage_1k.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
 // Load the backed texture
-/* const bakedTextureLoader = new THREE.TextureLoader()
+const bakedTextureLoader = new THREE.TextureLoader()
 const bakedTexture = bakedTextureLoader.load('./textures/baked.jpg')
-bakedTexture.flipY = false */
+bakedTexture.flipY = false
 
+// Create a new super simple material
+const bakedMaterial = new THREE.MeshStandardMaterial({
+  map: bakedTexture,
+  envMap: envTexture,
+  metalness: 0.5,
+  roughness: 0.5  
+})
 
+// Draco loader
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('./decoder/')
 
-
-
-
-
-
+const gltfLoader = new GLTFLoader()
+gltfLoader.setDRACOLoader(dracoLoader)
 
 
 
@@ -129,7 +139,7 @@ bakedTexture.flipY = false */
 /*********************/
 
 // Load the gltf
-new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
+gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
   const rabbitScene = gltf.scene
 
@@ -157,8 +167,8 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
       // If the name not contains "EYE_mesh" assign bakedtexture to the diffuse map      
       if (!child.name.includes('EYE_geo')) {
-        //child.material.map = bakedTexture
-        //child.material.needsUpdate = true        
+        child.material = bakedMaterial
+        child.material.needsUpdate = true        
       }
 
       // Shadow
@@ -237,9 +247,6 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
       })
 
-      console.log(`I'm blinking`)
-      console.log(canBlink)
-
       // Lower Blink animation
       anime({
         targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
@@ -255,6 +262,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   // Start the blink animation and repeat it every 1 seconds
   canBlink = true
+  setInterval(Blink, 2500)
 
 
 
@@ -268,11 +276,6 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   let eyesCanFollowMouse = true
   let headCanFollowMouse = true
 
-  function followMouse() {
-
-  }
-
-
   // Listen to the mouse move
   addEventListener('mousemove', function (e) {
 
@@ -281,8 +284,20 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
     var mousecoords = getMousePos(e)
 
     if (eyesCanFollowMouse == true) {
-      OrientTowards(LeftEye, mousecoords, 60)
-      OrientTowards(RightEye, mousecoords, 60)
+
+      let leftEyeRot = OrientTowards(LeftEye, mousecoords, 60)      
+      let rightEyeRot = OrientTowards(RightEye, mousecoords, 60)
+      //console.log(OrientTowards(LeftEye, mousecoords, 60));
+
+      // Implement the animation with anime.js to have a seamless animation
+      /* anime({
+        targets: [LeftEye.rotation, RightEye.rotation],
+        x: leftEyeRot[0],
+        y: leftEyeRot[1],
+        duration: 100,
+        easing: 'linear',
+      }) */
+
     }
 
     if (headCanFollowMouse == true) {
@@ -396,7 +411,7 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 
   // ON PASSWORD
   function focusOnPassword() {
-    console.log('focusOnPassword')
+    
     eyesCanFollowMouse = false
     headCanFollowMouse = false
 
@@ -449,7 +464,19 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
   }
 
 
-  console.log(NeckJoint.position)
+  
+
+},
+// called as loading progresses
+function ( xhr ) {
+
+  console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+},
+// called when loading has errors
+function ( error ) {
+
+  console.log( 'An error happened' );
 
 })
 
@@ -464,7 +491,9 @@ new GLTFLoader().load('./models/RabbitHead.glb', (gltf) => {
 // Create a Pointlight
 const Pointlight = new THREE.PointLight(0xffffff, 1.5, 100)
 Pointlight.position.set(-2, 2, 5)
-scene.add(Pointlight)
+// Add shadow
+//Pointlight.castShadow = true
+//scene.add(Pointlight)
 
 // LIGHT HELPERS
 // Create a helper for Point Light
@@ -475,9 +504,6 @@ const pointLightHelper = new THREE.PointLightHelper(Pointlight, 1)
 const clock = new THREE.Clock()
 let lastElapsedTime = 0
 let FPS = 0
-
-// FPS DOM
-const fpsdom = document.getElementById('FPS')
 
 // Create a point object with a new key position and a new key alement
 const point =
@@ -581,6 +607,8 @@ function OrientTowards(object, lookAt, degreeLimit) {
   let degrees = getMouseDegrees(lookAt.x, lookAt.y, degreeLimit)
   object.rotation.y = THREE.Math.degToRad(degrees.x)
   object.rotation.x = THREE.Math.degToRad(degrees.y)
+
+  return [object.rotation.y, object.rotation.x]
 }
 
 function getMouseDegrees(x, y, degreeLimit) {
