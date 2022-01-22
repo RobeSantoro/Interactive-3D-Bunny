@@ -38,7 +38,7 @@ document.body.appendChild(stats.dom) */
 
 const inputEmail = document.getElementById('Email')
 const inputPassword = document.getElementById('Password')
-const LoginButton = document.querySelector('#LoginButton')
+const LoginButton = document.getElementById('LoginButton')
 
 
 
@@ -85,8 +85,8 @@ const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
   antialias: true,
   alpha: true,
-  preserveDrawingBuffer: false,
-  premultipliedAlpha: false
+  //preserveDrawingBuffer: false,
+  //premultipliedAlpha: false
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2))
@@ -94,10 +94,6 @@ renderer.setClearColor(0x44337a, 0)
 renderer.render(scene, camera)
 renderer.outputEncoding = THREE.sRGBEncoding
 
-
-// Turn on shadow for the renderer
-// renderer.shadowMap.enabled = true
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 /* GRID
 const gridHelper = new THREE.GridHelper(10, 10)
@@ -107,23 +103,44 @@ const axisHelper = new THREE.AxesHelper(3)
 scene.add(axisHelper)
 */
 
+/*****************/
+/* TEXTURE SETUP */
+/*****************/
+
 // Load the environment texture
 const textureLoader = new THREE.TextureLoader()
-const envTexture = textureLoader.load('./textures/garage_1k.jpg')
+const envTexture = textureLoader.load('./textures/envMap.jpg')
 envTexture.mapping = THREE.EquirectangularReflectionMapping
 
-// Load the backed texture
+// Load the baked texture
 const bakedTextureLoader = new THREE.TextureLoader()
 const bakedTexture = bakedTextureLoader.load('./textures/baked.jpg')
+bakedTexture.encoding = THREE.sRGBEncoding ////////////////////////////// SUPER IMPORTANT !!!
 bakedTexture.flipY = false
 
-// Create a new super simple material
-const bakedMaterial = new THREE.MeshStandardMaterial({
-  map: bakedTexture,
-  envMap: envTexture,
-  metalness: 0.5,
-  roughness: 0.5  
+
+/******************/
+/* MATERIAL SETUP */
+/******************/
+
+// Create a new basic material for the baked Material
+const bakedMaterial = new THREE.MeshBasicMaterial({
+  map : bakedTexture,
 })
+
+// Create a new Standard Material for the eyes to enable reflections
+const eyesMaterial = new THREE.MeshStandardMaterial({
+  map : bakedTexture,
+  envMap: envTexture,
+  roughness: 0,
+  envMapIntensity: 5.0,  
+})
+
+
+
+/*********************/
+/* GLTF MODEL LOADER */
+/*********************/
 
 // Draco loader
 const dracoLoader = new DRACOLoader()
@@ -132,16 +149,12 @@ dracoLoader.setDecoderPath('./decoder/')
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(dracoLoader)
 
-
-
-/*********************/
-/* GLTF MODEL LOADER */
-/*********************/
-
 // Load the gltf
 gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
   const rabbitScene = gltf.scene
+
+  //console.log(rabbitScene)
 
   const Root = rabbitScene.getObjectByName('Armature')
   const NeckJoint = rabbitScene.getObjectByName('NECK_joint')
@@ -153,33 +166,16 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   const LeftLowerEyeLid = rabbitScene.getObjectByName('L_EYE_LW_LID_mesh')
   const RightLowerEyeLid = rabbitScene.getObjectByName('R_EYE_LW_LID_mesh')
 
+  
   rabbitScene.traverse((child) => {
-
-    /* if (child.isBone) {
-      console.log(child.name);
-    } */
-
-    if (child.isMesh) {
-
-      child.material.envMap = envTexture
-      child.material.envMapIntensity = 1
-      child.material.needsUpdate = true
-
-      // If the name not contains "EYE_mesh" assign bakedtexture to the diffuse map      
-      if (!child.name.includes('EYE_geo')) {
-        child.material = bakedMaterial
-        child.material.needsUpdate = true        
-      }
-
-      // Shadow
-      /* if (child.name === 'Base') {
-        child.receiveShadow = true
-      } else {
-        child.castShadow = true
-        child.receiveShadow = true
-      } */
+    
+    if (child.isMesh && child.name.includes('_mesh')) {
+      child.material = bakedMaterial     
     }
-
+    if (child.name.includes('EYE_mesh')) {  
+      child.material = eyesMaterial
+    }
+    
   })
 
   // Rotate the scene 180 degrees on the Y axis
@@ -468,17 +464,9 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
 },
 // called as loading progresses
-function ( xhr ) {
-
-  console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-
-},
+function ( xhr ) {  console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );},
 // called when loading has errors
-function ( error ) {
-
-  console.log( 'An error happened' );
-
-})
+function ( error ) {  console.log( 'An error happened' );})
 
 
 
@@ -489,7 +477,7 @@ function ( error ) {
 /********************/
 
 // Create a Pointlight
-const Pointlight = new THREE.PointLight(0xffffff, 1.5, 100)
+const Pointlight = new THREE.PointLight(0xffffff, 0.5, 100)
 Pointlight.position.set(-2, 2, 5)
 // Add shadow
 //Pointlight.castShadow = true
