@@ -125,18 +125,16 @@ bakedTexture.flipY = false
 
 // Create a new basic material for the baked Material
 const bakedMaterial = new THREE.MeshBasicMaterial({
-  map : bakedTexture,
+  map: bakedTexture,
 })
 
 // Create a new Standard Material for the eyes to enable reflections
 const eyesMaterial = new THREE.MeshStandardMaterial({
-  map : bakedTexture,
+  map: bakedTexture,
   envMap: envTexture,
   roughness: 0,
-  envMapIntensity: 5.0,  
+  envMapIntensity: 3.0,
 })
-
-
 
 /*********************/
 /* GLTF MODEL LOADER */
@@ -159,6 +157,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   const Root = rabbitScene.getObjectByName('Armature')
   const NeckJoint = rabbitScene.getObjectByName('NECK_joint')
   const HeadJoint = rabbitScene.getObjectByName('HEAD_joint')
+  const ChinJoint = rabbitScene.getObjectByName('CHIN_joint')
   const LeftEye = rabbitScene.getObjectByName('L_EYE_mesh')
   const RightEye = rabbitScene.getObjectByName('R_EYE_mesh')
   const LeftUpperEyeLid = rabbitScene.getObjectByName('L_EYE_UP_LID_mesh')
@@ -166,27 +165,33 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   const LeftLowerEyeLid = rabbitScene.getObjectByName('L_EYE_LW_LID_mesh')
   const RightLowerEyeLid = rabbitScene.getObjectByName('R_EYE_LW_LID_mesh')
 
-  
+  const RightHand = rabbitScene.getObjectByName('R_HAND_mesh')
+  const LeftHand = rabbitScene.getObjectByName('L_HAND_mesh')
+
   rabbitScene.traverse((child) => {
-    
-    if (child.isMesh && child.name.includes('_mesh')) {
-      child.material = bakedMaterial     
-    }
-    if (child.name.includes('EYE_mesh')) {  
+
+    if (child.name.includes('EYE_mesh')) {
       child.material = eyesMaterial
+    } else {
+      child.material = bakedMaterial
     }
-    
+
   })
 
-  // Rotate the scene 180 degrees on the Y axis
+  // Rotate the scene 180 degrees on the Y axis to face the camera
   rabbitScene.rotation.y = THREE.Math.degToRad(180)
 
   // Move the scene to the first frame for the Loading Animation
-  rabbitScene.position.y = -1
-  Root.position.y = -4.2
+  //rabbitScene.position.y = -0.5
+  // Move the bunny root down on the Y axis for the Loading Animation
+  Root.position.set(0, -4.5, 1)
+  // Move the bunny's hands down on the Y axis for the Loading Animation
+  RightHand.position.set(0, -2.5, 2)
+  LeftHand.position.set(0, -2.5, 2)
 
   // Add the rabbitScene to the scene
   scene.add(rabbitScene)
+
 
 
 
@@ -200,19 +205,23 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
   // Animate the whole scene
   anime({
-    targets: rabbitScene.position,
+    targets: [LeftHand.position, RightHand.position],
     y: 0,
-    duration: 1500,
-    delay: 200,
+    z: 0,
+    duration: 500,
+    delay: anime.stagger(1000),
+    easing: 'easeOutBack',
   })
 
   // Animate the bunny's root
-  // easing: 'spring(mass, stiffness, damping, velocity)'
+  // easing: 'spring(mass, stiffness, damping, velocity)' spring(1, 80, 10, 0)
   anime({
     targets: Root.position,
     y: -0.5,
-    delay: 1500,
-    easing: 'spring(1, 80, 10, 0)'
+    z: 0,
+    delay: 1700,
+    duration: 500,
+    easing: 'spring(.5, 90, 10, 0)'
   })
 
 
@@ -227,7 +236,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   /* Blink Animation */
   /*******************/
 
-  let canBlink = null
+  let canBlink = true
 
   function Blink() {
     if (canBlink == true) {
@@ -239,8 +248,6 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
         duration: 80,
         easing: 'linear',
         direction: 'alternate',
-
-
       })
 
       // Lower Blink animation
@@ -251,57 +258,48 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
         easing: 'linear',
         direction: 'alternate',
 
-
       })
     }
   }
 
-  // Start the blink animation and repeat it every 1 seconds
-  canBlink = true
+  // Start the blink animation and repeat it every 2.5 seconds
   setInterval(Blink, 2500)
 
 
 
 
 
-
-  /***************************/
-  /* Head Movement Animation */
-  /***************************/
+  /**********************************/
+  /* Follow Mouse Cursor Animation  */
+  /**********************************/
 
   let eyesCanFollowMouse = true
   let headCanFollowMouse = true
 
   // Listen to the mouse move
-  addEventListener('mousemove', function (e) {
+  addEventListener('mousemove', followMouseCursor)
+  // Listen to the mouse click on the canvas
+  canvas.addEventListener('click', followMouseCursor)
+
+
+  function followMouseCursor(e) {
+    var mousecoords = getMousePos(e)
 
     canBlink = true
 
-    var mousecoords = getMousePos(e)
-
     if (eyesCanFollowMouse == true) {
-
-      let leftEyeRot = OrientTowards(LeftEye, mousecoords, 60)      
-      let rightEyeRot = OrientTowards(RightEye, mousecoords, 60)
-      //console.log(OrientTowards(LeftEye, mousecoords, 60));
-
-      // Implement the animation with anime.js to have a seamless animation
-      /* anime({
-        targets: [LeftEye.rotation, RightEye.rotation],
-        x: leftEyeRot[0],
-        y: leftEyeRot[1],
-        duration: 100,
-        easing: 'linear',
-      }) */
-
+      OrientTowards(LeftEye, mousecoords, 60)
+      OrientTowards(RightEye, mousecoords, 60)
     }
 
     if (headCanFollowMouse == true) {
       OrientTowards(NeckJoint, mousecoords, 15)
-      OrientTowards(HeadJoint, mousecoords, 20)
+      OrientTowards(HeadJoint, mousecoords, 10)
+      //OrientTowards(ChinJoint, mousecoords, -5)
     }
 
-  })
+
+  }
 
   // Listen to the touch move
   addEventListener('touchmove', function (e) {
@@ -315,15 +313,12 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     }
 
     if (headCanFollowMouse == true) {
-      OrientTowards(NeckJoint, touchcoords, 15)
-      OrientTowards(HeadJoint, touchcoords, 20)
+      OrientTowards(NeckJoint, mousecoords, 15)
+      OrientTowards(HeadJoint, mousecoords, 10)
+      //OrientTowards(ChinJoint, mousecoords, 5)
     }
 
   })
-
-
-
-
 
 
 
@@ -334,18 +329,12 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   /******************************/
 
   // When the user interact with email input
-  if (inputEmail.attachEvent) inputEmail.attachEvent('focus', focusOnMail);
-  else inputEmail.addEventListener('focus', focusOnMail)
+  inputEmail.addEventListener('click', focusOnMail)
+  inputEmail.addEventListener('focus', focusOnMail)
+  inputEmail.addEventListener('input', focusOnMail)
+  inputEmail.addEventListener('focusout', focusOutMail)
 
-  if (inputEmail.attachEvent) inputEmail.attachEvent('focusout', focusOutMail);
-  else inputEmail.addEventListener('focusout', focusOutMail)
-
-  if (inputEmail.attachEvent) inputEmail.attachEvent('input', focusOnMail);
-  else inputEmail.addEventListener('input', focusOnMail)
-
-  if (inputEmail.attachEvent) inputEmail.attachEvent('click', focusOnMail);
-  else inputEmail.addEventListener('click', focusOnMail)
-
+  // ON MAIL
   function focusOnMail() {
     eyesCanFollowMouse = false
     canBlink = false
@@ -353,13 +342,43 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     // Get the length of the email input
     let inputMailLength = inputEmail.value.length
 
+    // Move the Root to the look at the email input
+    anime({
+      targets: Root.position,
+      y: -0.75,
+      z: -1,
+      delay: 50,
+      duration: 500,
+      easing: 'easeOutElastic(1, .8)',
+    })
+
+    // Move the hands Up on Y while rotating them  
+    /*     anime({
+          targets: [RightHand.position, LeftHand.position],
+          y:0.5,
+          duration: 120,
+          easing: 'linear',
+          direction: 'alternate',
+          endDelay: 1000,
+        }) */
+
+    // Animate the hands rotating them in opposite directions on the Y axis
+    anime({
+      targets: [RightHand.rotation, LeftHand.rotation],
+      y: 0,
+      duration: 120,
+      easing: 'easeOutElastic(1, .8)',
+      direction: 'normal'
+    })
+
+
     // Move eyes to the beginning of the email input
     // and add inputMail Length as an offset    
     anime({
       targets: [LeftEye.rotation, RightEye.rotation],
       x: (-Math.PI / 2) + 0.5,
       y: (-Math.PI / 2) + inputMailLength * 0.045 + 1,
-      duration: 150,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
 
@@ -367,82 +386,161 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     anime({
       targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
       x: (-Math.PI / 2) + 0.5,
-      duration: 150,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
 
+  } // END ON MAIL
 
-  }
-
+  // OUT OF MAIL
   function focusOutMail() {
     eyesCanFollowMouse = true
     canBlink = true
+
+    // Move the Root to reset the position
+    anime({
+      targets: Root.position,
+      y: -0.5,
+      z: 0,
+      duration: 500,
+      easing: 'easeOutElastic(1, .8)'
+    })
 
     // Rotates the EyeLids back to the original position
     anime({
       targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
       x: 0,
-      duration: 150,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
 
-  }
+    // Animate the Right hand rotating them  on the Y axis
+    anime({
+      targets: [RightHand.rotation],
+      y: THREE.Math.degToRad(10),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 200,
+    })
+    // Same for the Left hand
+    anime({
+      targets: [LeftHand.rotation],
+      y: THREE.Math.degToRad(-10),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 300,
+    })
+
+
+  } // END OUT OF MAIL
 
   /*********************************/
   /* PASSWORD INPUT FORM ANIMATION */
   /*********************************/
 
   // When the user interact with email input
-  if (inputPassword.attachEvent) inputPassword.attachEvent('focus', focusOnPassword);
-  else inputPassword.addEventListener('focus', focusOnPassword)
-
-  if (inputPassword.attachEvent) inputPassword.attachEvent('focusout', focusOutPassword);
-  else inputPassword.addEventListener('focusout', focusOutPassword)
-
-  if (inputPassword.attachEvent) inputPassword.attachEvent('input', focusOnPassword);
-  else inputPassword.addEventListener('input', focusOnPassword)
-
-  if (inputPassword.attachEvent) inputPassword.attachEvent('click', focusOnPassword);
-  else inputPassword.addEventListener('click', focusOnPassword)
+  inputPassword.addEventListener('focus', focusOnPassword)
+  inputPassword.addEventListener('focusout', focusOutPassword)
+  inputPassword.addEventListener('input', focusOnPassword)
+  inputPassword.addEventListener('click', focusOnPassword)
 
   // ON PASSWORD
   function focusOnPassword() {
-    
     eyesCanFollowMouse = false
     headCanFollowMouse = false
 
     // Get the length of the password input
     let inputPasswordLength = inputPassword.value.length
 
+    if (inputPasswordLength > 5) {
+
+      // Move eyes to the beginning of the password input
+      // and add inputPasswordLength as an offset      
+      anime({
+        targets: [LeftEye.rotation, RightEye.rotation],
+        x: THREE.Math.degToRad(-10),
+        y: (-Math.PI / 2) + inputPasswordLength * 0.045 + 1,
+        duration: 250,
+        direction: 'alternate',
+        loop: 1,
+        easing: 'easeOutElastic(1, .8)',
+      })
+
+      // Rotate the EyeLids on the X axis
+      anime({
+        targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+        x: THREE.Math.degToRad(-50),
+        duration: 250,
+        direction: 'alternate',
+        loop: 1,
+        easing: 'easeOutElastic(1, .8)',
+      })
+
+    } else {
+
+      // Rotate the Eye on the X and Y axis to reset the eyes position
+      anime({
+        targets: [LeftEye.rotation, RightEye.rotation],
+        x: 0,
+        y: 0,
+        duration: 500,
+        easing: 'easeOutElastic(1, .8)'
+      })
+
+      // Rotate the EyeLids on the X axis
+      anime({
+        targets: [LeftUpperEyeLid.rotation, RightUpperEyeLid.rotation],
+        x: 0,
+        duration: 500,
+        easing: 'easeOutElastic(1, .8)'
+      })
+
+
+    }
+
     // Move eyes to the beginning of the password input
     // and add inputPasswordLength as an offset
 
-    anime({
-      targets: [LeftEye.rotation, RightEye.rotation],
-      x: 0,
-      y: 0,
-      duration: 150,
-      easing: 'easeOutElastic(1, .8)'
-    })
-
-    // Move the NeckJoint down on the Y axis
+    // Move the NeckJoint down on the Y axis to hide it in the hole
     anime({
       targets: NeckJoint.position,
       y: -1.3,
-      duration: 150,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
-    
-    // Rotate the HeadJoint on the X axis
+
+    // Rotate the HeadJoint on the X axis to reset the Head position
     anime({
       targets: HeadJoint.rotation,
       x: 0.3,
-      duration: 150,
+      y: 0,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
 
 
-  }
+
+
+
+    // Animate the Right hand rotating them  on the Y axis
+    anime({
+      targets: [RightHand.rotation],
+      y: THREE.Math.degToRad(15),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 200,
+    })
+    // Same for the Left hand
+    anime({
+      targets: [LeftHand.rotation],
+      y: THREE.Math.degToRad(-15),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 300,
+    })
+
+
+  } // END ON PASSWORD
 
   // OUT PASSWORD
   function focusOutPassword() {
@@ -453,20 +551,44 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     anime({
       targets: NeckJoint.position,
       y: -0.626,
-      duration: 150,
+      duration: 500,
       easing: 'easeOutElastic(1, .8)'
     })
 
+    // Rotate the EyeLids on the X axis
+    anime({
+      targets: [LeftLowerEyeLid.rotation, RightLowerEyeLid.rotation],
+      x: 0,
+      duration: 500,
+      easing: 'easeOutElastic(1, .8)'
+    })
+
+    // Animate the Right hand rotating them  on the Y axis
+    anime({
+      targets: [RightHand.rotation],
+      y: THREE.Math.degToRad(10),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 0,
+    })
+    // Same for the Left hand
+    anime({
+      targets: [LeftHand.rotation],
+      y: THREE.Math.degToRad(-10),
+      easing: 'easeOutElastic(1, .8)',
+      duration: 500,
+      delay: 100,
+    })
   }
 
 
-  
+
 
 },
-// called as loading progresses
-function ( xhr ) {  console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );},
-// called when loading has errors
-function ( error ) {  console.log( 'An error happened' );})
+  // called as loading progresses
+  function (xhr) { console.log((xhr.loaded / xhr.total * 100) + '% loaded'); },
+  // called when loading has errors
+  function (error) { console.log('An error happened'); })
 
 
 
