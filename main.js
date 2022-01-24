@@ -71,7 +71,7 @@ orbitCamera.lookAt({ x: 0, y: 2, z: 0 })
 
 const staticCamera = new THREE.PerspectiveCamera(25, sizes.width / sizes.height, 0.1, 1000)
 //staticCamera.position.y = -1.5
-staticCamera.position.z = 16
+staticCamera.position.z = 15
 staticCamera.lookAt(0, -1.5, 0)
 
 camera = orbitCamera
@@ -178,13 +178,15 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
   })
 
-  // Rotate the scene 180 degrees on the Y axis to face the camera
+  // Rotate the scene 180 degrees on the Y axis to facing the camera
   rabbitScene.rotation.y = THREE.Math.degToRad(180)
 
   // Move the scene to the first frame for the Loading Animation
   //rabbitScene.position.y = -0.5
+
   // Move the bunny root down on the Y axis for the Loading Animation
   Root.position.set(0, -4.5, 1)
+
   // Move the bunny's hands down on the Y axis for the Loading Animation
   RightHand.position.set(0, -2.5, 2)
   LeftHand.position.set(0, -2.5, 2)
@@ -203,7 +205,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   /* Loading Intro Animation */
   /***************************/
 
-  // Animate the whole scene
+  // Animate the hands position
   anime({
     targets: [LeftHand.position, RightHand.position],
     y: 0,
@@ -294,8 +296,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
     if (headCanFollowMouse == true) {
       OrientTowards(NeckJoint, mousecoords, 15)
-      OrientTowards(HeadJoint, mousecoords, 10)
-      //OrientTowards(ChinJoint, mousecoords, -5)
+      OrientTowards(HeadJoint, mousecoords, 10)      
     }
 
 
@@ -313,9 +314,8 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     }
 
     if (headCanFollowMouse == true) {
-      OrientTowards(NeckJoint, mousecoords, 15)
-      OrientTowards(HeadJoint, mousecoords, 10)
-      //OrientTowards(ChinJoint, mousecoords, 5)
+      OrientTowards(NeckJoint, touchcoords, 15)
+      OrientTowards(HeadJoint, touchcoords, 10)      
     }
 
   })
@@ -323,18 +323,23 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
 
 
-
-  /******************************/
-  /* EMAIL INPUT FORM ANIMATION */
-  /******************************/
-
+  
+  /****************************************************************************************************/
+  /***************************************************************************** INPUT FORM ANIMATION */
+  /****************************************************************************************************/
+  
+  // When the user interact with email input
+  inputPassword.addEventListener('click', focusOnPassword)
+  inputPassword.addEventListener('focus', focusOnPassword)
+  inputPassword.addEventListener('input', focusOnPassword)
+  inputPassword.addEventListener('focusout', focusOutPassword)
   // When the user interact with email input
   inputEmail.addEventListener('click', focusOnMail)
   inputEmail.addEventListener('focus', focusOnMail)
-  inputEmail.addEventListener('input', focusOnMail)
+  inputEmail.addEventListener('input', focusOnMail)  
   inputEmail.addEventListener('focusout', focusOutMail)
-
-  // ON MAIL
+  
+  ////////////////////////////////////////////////////////////////////////////////////////////// ON MAIL
   function focusOnMail() {
     eyesCanFollowMouse = false
     canBlink = false
@@ -345,30 +350,27 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
     // Move the Root to the look at the email input
     anime({
       targets: Root.position,
-      y: -0.75,
+      y: -0.2,
       z: -1,
-      delay: 50,
       duration: 500,
       easing: 'easeOutElastic(1, .8)',
+      delay: 250,
+    })
+    anime({
+      targets: Root.rotation,
+      x: + THREE.Math.degToRad(-20),
+      duration: 500,
+      easing: 'easeOutElastic(1, .8)',
+      delay: 250,
     })
 
-    // Move the hands Up on Y while rotating them  
-    /*     anime({
-          targets: [RightHand.position, LeftHand.position],
-          y:0.5,
-          duration: 120,
-          easing: 'linear',
-          direction: 'alternate',
-          endDelay: 1000,
-        }) */
-
-    // Animate the hands rotating them in opposite directions on the Y axis
+    // Animate the hands resetting to the original rotation on the Y axis
     anime({
       targets: [RightHand.rotation, LeftHand.rotation],
       y: 0,
-      duration: 120,
+      duration: 250,
       easing: 'easeOutElastic(1, .8)',
-      direction: 'normal'
+      delay: 100,
     })
 
 
@@ -392,7 +394,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
 
   } // END ON MAIL
 
-  // OUT OF MAIL
+/////////////////////////////////////////////////////////////////////////////////////////////// OUT MAIL
   function focusOutMail() {
     eyesCanFollowMouse = true
     canBlink = true
@@ -404,6 +406,13 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       z: 0,
       duration: 500,
       easing: 'easeOutElastic(1, .8)'
+    })
+    anime({
+      targets: Root.rotation,
+      x: + THREE.Math.degToRad(0),
+      duration: 500,
+      easing: 'easeOutElastic(1, .8)',
+      delay: 250,
     })
 
     // Rotates the EyeLids back to the original position
@@ -419,32 +428,26 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       targets: [RightHand.rotation],
       y: THREE.Math.degToRad(10),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
-      delay: 200,
+      duration: 100,
+      delay: 0,
     })
     // Same for the Left hand
     anime({
       targets: [LeftHand.rotation],
       y: THREE.Math.degToRad(-10),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
-      delay: 300,
+      duration: 100,
+      delay: 0,
     })
 
 
-  } // END OUT OF MAIL
+  } // END OUT MAIL
 
-  /*********************************/
-  /* PASSWORD INPUT FORM ANIMATION */
-  /*********************************/
+  /******************************************************************************************************/
+  /********************************************************************** PASSWORD INPUT FORM ANIMATION */
+  /******************************************************************************************************/
 
-  // When the user interact with email input
-  inputPassword.addEventListener('focus', focusOnPassword)
-  inputPassword.addEventListener('focusout', focusOutPassword)
-  inputPassword.addEventListener('input', focusOnPassword)
-  inputPassword.addEventListener('click', focusOnPassword)
-
-  // ON PASSWORD
+  //////////////////////////////////////////////////////////////////////////////////////////// ON PASSWORD
   function focusOnPassword() {
     eyesCanFollowMouse = false
     headCanFollowMouse = false
@@ -514,35 +517,31 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       targets: HeadJoint.rotation,
       x: 0.3,
       y: 0,
-      duration: 500,
+      duration: 100,
       easing: 'easeOutElastic(1, .8)'
     })
-
-
-
-
 
     // Animate the Right hand rotating them  on the Y axis
     anime({
       targets: [RightHand.rotation],
       y: THREE.Math.degToRad(15),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
-      delay: 200,
+      duration: 400,
+      delay: 0,
     })
     // Same for the Left hand
     anime({
       targets: [LeftHand.rotation],
       y: THREE.Math.degToRad(-15),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
-      delay: 300,
+      duration: 400,
+      delay: 0,
     })
 
 
   } // END ON PASSWORD
 
-  // OUT PASSWORD
+  /////////////////////////////////////////////////////////////////////////////////////////// OUT PASSWORD
   function focusOutPassword() {
     eyesCanFollowMouse = true
     headCanFollowMouse = true
@@ -553,7 +552,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       y: -0.626,
       duration: 500,
       easing: 'easeOutElastic(1, .8)'
-    })
+    })    
 
     // Rotate the EyeLids on the X axis
     anime({
@@ -568,7 +567,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       targets: [RightHand.rotation],
       y: THREE.Math.degToRad(10),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
+      duration: 90,
       delay: 0,
     })
     // Same for the Left hand
@@ -576,10 +575,10 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
       targets: [LeftHand.rotation],
       y: THREE.Math.degToRad(-10),
       easing: 'easeOutElastic(1, .8)',
-      duration: 500,
-      delay: 100,
+      duration: 90,
+      delay: 0,
     })
-  }
+  } // END OUT PASSWORD
 
 
 
