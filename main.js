@@ -329,15 +329,16 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   /****************************************************************************************************/
   
   // When the user interact with email input
-  inputPassword.addEventListener('click', focusOnPassword)
-  inputPassword.addEventListener('focus', focusOnPassword)
-  inputPassword.addEventListener('input', focusOnPassword)
-  inputPassword.addEventListener('focusout', focusOutPassword)
-  // When the user interact with email input
-  inputEmail.addEventListener('click', focusOnMail)
+  //inputEmail.addEventListener('click', focusOnMail)
   inputEmail.addEventListener('focus', focusOnMail)
   inputEmail.addEventListener('input', focusOnMail)  
   inputEmail.addEventListener('focusout', focusOutMail)
+
+    // When the user interact with email input
+  //inputPassword.addEventListener('click', focusOnPassword)
+  inputPassword.addEventListener('focus', focusOnPassword)
+  inputPassword.addEventListener('input', focusOnPassword)
+  inputPassword.addEventListener('focusout', focusOutPassword)
   
   ////////////////////////////////////////////////////////////////////////////////////////////// ON MAIL
   function focusOnMail() {
