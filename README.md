@@ -13,7 +13,7 @@ It could really enhance the login experience if I put more effort into it.
 
 // TODO:
 - [x] Interaction with the username field
-- [ ] Interaction with the password field
+- [x] Interaction with the password field
 - [ ] Interaction with the Login button
 - [ ] Manage the events and the animation in a better way
 - [ ] Refactor everything
