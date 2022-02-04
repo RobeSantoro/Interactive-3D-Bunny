@@ -19,8 +19,8 @@ import { Pane } from 'tweakpane'
 const PARAMS = {
   useOrbitCamera: false
 }
-const pane = new Pane()
-pane.addInput(PARAMS, 'useOrbitCamera')
+//const pane = new Pane()
+//pane.addInput(PARAMS, 'useOrbitCamera')
 
 // Import Stats
 import Stats from 'three/examples/jsm/libs/stats.module.js'
@@ -588,7 +588,7 @@ gltfLoader.load('./models/RabbitHead.glb', (gltf) => {
   // called as loading progresses
   function (xhr) { console.log((xhr.loaded / xhr.total * 100) + '% loaded'); },
   // called when loading has errors
-  function (error) { console.log('An error happened'); })
+  function (error) { error })
 
 
 
